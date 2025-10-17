@@ -15,14 +15,16 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+      "package": "com.mdariz.brainmaster"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "index": "index.html"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "89e08d08-c3bb-422a-988f-9f33dc02ed2d"
+      }
     }
   }
 }
