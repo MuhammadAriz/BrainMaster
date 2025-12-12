@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -22,31 +22,25 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   
   const [equation, setEquation] = useState<(number | string)[]>([]);
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-  const [selectedOperators, setSelectedOperators] = useState<string[]>([]);
   const [result, setResult] = useState<number | null>(null);
+  const [userSolution, setUserSolution] = useState<Record<string, string>>({});
+  const [solvedEmojis, setSolvedEmojis] = useState<string[]>([]);
   
-  // Animation value for success
   const scale = useSharedValue(1);
   
-  // Operators available
   const operators = ['+', '-', '×', '÷'];
   
-  // Calculate the result of the equation
   useEffect(() => {
     if (equation.length > 0) {
       try {
-        // Convert × and ÷ to * and / for evaluation
         const evalEquation = equation
           .map(item => typeof item === 'string' ? item.replace('×', '*').replace('÷', '/') : item)
           .join('');
         
-        // Evaluate the equation
         const calculatedResult = eval(evalEquation);
         setResult(calculatedResult);
         
-        // Check if the result matches the target
-        if (calculatedResult === target) {
-          // Success animation
+        if (calculatedResult === target && selectedNumbers.length === numbers.length) {
           scale.value = withSpring(1.2, { damping: 10 });
           setTimeout(() => {
             scale.value = withSpring(1);
@@ -65,14 +59,11 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
     }
   }, [equation]);
   
-  // Handle number selection
   const handleNumberPress = (num: number) => {
     if (selectedNumbers.includes(num)) {
-      // Remove from equation
       const numIndex = selectedNumbers.indexOf(num);
       const newEquation = [...equation];
       
-      // Find the position of this number in the equation
       let count = 0;
       let position = -1;
       
@@ -87,7 +78,6 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
       }
       
       if (position !== -1) {
-        // Remove the number and adjacent operator if exists
         if (position > 0 && typeof newEquation[position - 1] === 'string') {
           newEquation.splice(position - 1, 2);
         } else if (position < newEquation.length - 1 && typeof newEquation[position + 1] === 'string') {
@@ -100,56 +90,52 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         setSelectedNumbers(selectedNumbers.filter((_, i) => i !== numIndex));
       }
     } else {
-      // Add to equation
-      const newEquation = [...equation];
-      
-      // Add operator if not the first number
-      if (newEquation.length > 0) {
-        newEquation.push('+'); // Default operator
+      const lastItem = equation[equation.length - 1];
+      if (equation.length === 0 || typeof lastItem === 'string') {
+        const newEquation = [...equation, num];
+        setEquation(newEquation);
+        setSelectedNumbers([...selectedNumbers, num]);
+      } else {
+        toast.error('An operator must be placed between numbers.');
       }
-      
-      newEquation.push(num);
-      setEquation(newEquation);
-      setSelectedNumbers([...selectedNumbers, num]);
     }
   };
   
-  // Handle operator selection
   const handleOperatorPress = (op: string) => {
-    // Find all operator positions in the equation
-    const operatorPositions = equation.reduce((positions, item, index) => {
-      if (typeof item === 'string') positions.push(index);
-      return positions;
-    }, [] as number[]);
-    
-    // Show a menu of operator positions or allow selecting the last one
-    if (operatorPositions.length > 0) {
-      // For simplicity, we'll just change the last operator
-      const lastOpIndex = operatorPositions[operatorPositions.length - 1];
+    if (equation.length === 0) {
+      toast.error('Please select a number first.');
+      return;
+    }
+  
+    const lastItem = equation[equation.length - 1];
+  
+    if (typeof lastItem === 'number') {
+      const newEquation = [...equation, op];
+      setEquation(newEquation);
+    } else if (typeof lastItem === 'string') {
       const newEquation = [...equation];
-      newEquation[lastOpIndex] = op;
+      newEquation[equation.length - 1] = op;
       setEquation(newEquation);
     }
   };
   
-  // Clear the equation
   const handleClear = () => {
     setEquation([]);
     setSelectedNumbers([]);
-    setSelectedOperators([]);
     setResult(null);
   };
   
-  // Animated style for success
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
     };
   });
   
-  // Render equation puzzle
   const renderEquationPuzzle = () => (
     <View style={styles.puzzleContainer}>
+      <Text style={styles.numbersUsedText}>
+        Numbers Used: {selectedNumbers.length} / {numbers.length}
+      </Text>
       <View style={styles.equationContainer}>
         {equation.length > 0 ? (
           equation.map((item, index) => (
@@ -167,7 +153,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
             <Animated.Text 
               style={[
                 styles.resultText, 
-                result === target ? styles.correctResult : styles.incorrectResult,
+                result === target && selectedNumbers.length === numbers.length ? styles.correctResult : styles.incorrectResult,
                 animatedStyle
               ]}
             >
@@ -210,9 +196,36 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
     </View>
   );
   
-  // Render emoji equation puzzle
   const renderEmojiPuzzle = () => {
     if (!config?.equations || !config?.solution) return null;
+
+    const handleInputChange = (emoji: string, text: string) => {
+        setUserSolution(prev => ({ ...prev, [emoji]: text }));
+    };
+
+    const checkSolution = () => {
+        let allCorrect = true;
+        const newSolvedEmojis: string[] = [];
+        for (const emoji in config.solution) {
+            if (parseInt(userSolution[emoji]) === config.solution[emoji]) {
+                newSolvedEmojis.push(emoji);
+            } else {
+                allCorrect = false;
+            }
+        }
+        setSolvedEmojis(newSolvedEmojis);
+
+        if (allCorrect) {
+            toast.success('Congratulations! You solved it!');
+            setTimeout(() => {
+                onComplete();
+            }, 1000);
+        } else if (newSolvedEmojis.length > 0) {
+             toast.error('Some are correct. Keep trying!');
+        } else {
+            toast.error('Not quite, check your answers.');
+        }
+    };
     
     return (
       <View style={styles.emojiContainer}>
@@ -232,37 +245,26 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         <View style={styles.emojiSolution}>
           <Text style={styles.emojiQuestion}>What is the value of each emoji?</Text>
           
-          {Object.entries(config.solution).map(([emoji, value], index) => (
+          {Object.keys(config.solution).map((emoji, index) => (
             <View key={index} style={styles.emojiValueRow}>
               <Text style={styles.emojiText}>{emoji}</Text>
               <Text style={styles.emojiEquals}>=</Text>
-              <Pressable
-                style={styles.emojiValueButton}
-                onPress={() => {
-                  // Check if the value is correct
-                  if (value === config.solution[emoji]) {
-                    toast.success(`Correct! ${emoji} = ${value}`);
-                    
-                    // Check if all emojis are solved
-                    const allSolved = Object.keys(config.solution).every(
-                      e => config.solution[e] === value
-                    );
-                    
-                    if (allSolved) {
-                      setTimeout(() => {
-                        onComplete();
-                      }, 1000);
-                    }
-                  } else {
-                    toast.error('Try again!');
-                  }
-                }}
-              >
-                <Text style={styles.emojiValueText}>?</Text>
-              </Pressable>
+              <TextInput
+                style={[
+                    styles.emojiInput,
+                    solvedEmojis.includes(emoji) && styles.correctInput
+                ]}
+                keyboardType="number-pad"
+                maxLength={2}
+                onChangeText={(text) => handleInputChange(emoji, text)}
+                value={userSolution[emoji] || ''}
+              />
             </View>
           ))}
         </View>
+        <Pressable style={styles.checkButton} onPress={checkSolution}>
+            <Text style={styles.checkButtonText}>Check Answer</Text>
+        </Pressable>
       </View>
     );
   };
@@ -274,7 +276,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
     >
       <Text style={styles.instruction}>
         {puzzleType === 'equation' 
-          ? `Create an equation that equals ${target}`
+          ? `Create an equation that equals ${target} using all numbers provided`
           : 'Solve the emoji equations'}
       </Text>
       
@@ -396,8 +398,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+   numbersUsedText: {
+    color: '#888',
+    fontSize: 16,
+    marginBottom: 10,
+  },
   emojiContainer: {
     width: '100%',
+    alignItems: 'center',
   },
   emojiEquation: {
     flexDirection: 'row',
@@ -440,6 +448,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
+  },
+  emojiInput: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#444',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#555',
+    color: '#fff',
+    fontSize: 24,
+    textAlign: 'center',
+  },
+  correctInput: {
+      borderColor: '#4CAF50',
+      color: '#4CAF50',
+  },
+  checkButton: {
+      backgroundColor: '#4CAF50',
+      paddingVertical: 12,
+      paddingHorizontal: 30,
+      borderRadius: 25,
+      marginTop: 20,
+  },
+  checkButtonText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: 'bold',
   },
   emojiValueButton: {
     width: 50,

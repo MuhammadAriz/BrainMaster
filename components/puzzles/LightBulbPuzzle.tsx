@@ -85,7 +85,6 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
       style={styles.container}
     >
       <Text style={styles.instruction}>Turn on all the bulbs!</Text>
-      <Text style={styles.subInstruction}>Tapping one bulb toggles it and adjacent bulbs</Text>
       
       <View style={styles.bulbsContainer}>
         {bulbStates.map((isOn, index) => (

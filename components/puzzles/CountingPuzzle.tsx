@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
-import Svg, { Path, G } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { toast } from 'sonner-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface CountingPuzzleProps {
   onComplete: () => void;
-  config?: any;
+  config?: {
+    correctAnswer?: number;
+    numbers?: number[];
+  };
 }
 
 export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, config }) => {
   const [attempts, setAttempts] = useState(0);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   
-  // Default correct answer is 13 triangles, can be overridden by config
-  const correctAnswer = config?.correctAnswer || 13;
-  
-  // Numbers to choose from
+  const correctAnswer = config?.correctAnswer || 15;
   const numbers = config?.numbers || [8, 10, 13, 15, 18];
 
   const handleNumberPress = (number: number) => {
@@ -33,11 +33,6 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
       setTimeout(() => {
         setSelectedNumber(null);
       }, 1000);
-      
-      // Show hint after 3 failed attempts
-      if (attempts === 2) {
-        toast.info('Hint: Count the small, medium, and large triangles!');
-      }
     }
   };
 
@@ -110,7 +105,7 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
           </Pressable>
         ))}
       </View>
-      
+
       {attempts > 0 && (
         <Text style={styles.attemptsText}>Attempts: {attempts}</Text>
       )}

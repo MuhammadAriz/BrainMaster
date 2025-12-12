@@ -42,7 +42,7 @@ const levels: Record<number, Level> = {
     category: 'LOGIC',
     difficulty: 'easy',
     question: "Turn on the light bulb. The switch might not work as expected...",
-    hint: "Sometimes you need to warm up the bulb first. Try tapping it multiple times!",
+    hint: "Tapping one bulb toggles it and adjacent bulbs",//"Sometimes you need to warm up the bulb first. Try tapping it multiple times!",
     component: LightBulbPuzzle
   },
 
@@ -301,10 +301,10 @@ const levels: Record<number, Level> = {
     config: {
       type: 'emoji',
       equations: [
-        { emoji: ['🍎', '🍎', '🍌'], result: 10 },
-        { emoji: ['🍎', '🍌'], result: 7 }
+        { emoji: ['🍎', '🍎', '🍒'], result: 12 },
+        { emoji: ['🍎', '🍒'], result: 8 }
       ],
-      solution: { '🍎': 4, '🍌': 3 }
+      solution: { '🍎': 4, '🍒': 4 }
     }
   }
 };
