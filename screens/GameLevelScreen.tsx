@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, BackHandler } from 'react-native';
+import { View, StyleSheet, BackHandler, Text, Pressable } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { PuzzleLevel } from '../components/PuzzleLevel';
@@ -111,7 +112,27 @@ export default function GameLevelScreen() {
     }
   };
 
-  if (!levelData) return null;
+  if (!levelData) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backIcon}>
+            <MaterialCommunityIcons name="arrow-left" size={30} color="#fff" />
+          </Pressable>
+          <Text style={styles.headerTitle}>Level {levelId}</Text>
+          <View style={{ width: 30 }} />
+        </View>
+        <View style={styles.inProgressContainer}>
+          <MaterialCommunityIcons name="hammer-wrench" size={80} color="#666" />
+          <Text style={styles.inProgressTitle}>Coming Soon!</Text>
+          <Text style={styles.inProgressText}>This level is currently in progress.</Text>
+          <Pressable style={styles.returnButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.returnButtonText}>Return to Level Select</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -140,5 +161,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 40,
+  },
+  backIcon: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  inProgressContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  inProgressTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  inProgressText: {
+    fontSize: 16,
+    color: '#ccc',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  returnButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  returnButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

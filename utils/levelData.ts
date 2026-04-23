@@ -152,20 +152,20 @@ const levels: Record<number, Level> = {
       smallerSize: true
     }
   },
-   // Level 11 - Odd One Out
+  // Level 11 - Odd One Out
   11: {
-  id: 11,
-  title: "Shape Shifter",
-  category: 'LOGIC',
-  difficulty: 'easy',
-  question: "Which shape has been rotated and mirrored?",
-  hint: "Look at the orientation of each shape closely. One of them looks flipped!",
-  component: LogicPuzzle,
-  config: {
-    shapes: ['⬛', '⬛', '🔺', '🔺'],
-    answer: 3
-  }
-},
+    id: 11,
+    title: "Shape Shifter",
+    category: 'LOGIC',
+    difficulty: 'easy',
+    question: "Which shape has been rotated and mirrored?",
+    hint: "Look at the orientation of each shape closely. One of them looks flipped!",
+    component: LogicPuzzle,
+    config: {
+      shapes: ['⬛', '⬛', '🔺', '🔺'],
+      answer: 3
+    }
+  },
   // Level 12 - Light Bulb Puzzle
   12: {
     id: 12,
@@ -176,36 +176,36 @@ const levels: Record<number, Level> = {
     hint: "Try to understand how each tap affects the pattern. Sometimes you need to turn some bulbs off temporarily to get the final solution.",
     component: LightBulbPuzzle
   },
-   // Level 13 - Counting Puzzle
-13: {
-  id: 13,
-  title: "Square Squad",
-  category: 'MATH',
-  difficulty: 'easy',
-  question: "How many squares can you find in this figure?",
-  hint: "Count both small and larger squares formed by combining smaller ones.",
-  component: CountingPuzzle,
-  config: {
-    answer: 14
-  }
-},
+  // Level 13 - Counting Puzzle
+  13: {
+    id: 13,
+    title: "Square Squad",
+    category: 'MATH',
+    difficulty: 'easy',
+    question: "How many squares can you find in this figure?",
+    hint: "Count both small and larger squares formed by combining smaller ones.",
+    component: CountingPuzzle,
+    config: {
+      answer: 14
+    }
+  },
 
   // Level 14 - Word Puzzle
-14: {
-  id: 14,
-  title: "Word Chain",
-  category: 'LOGIC',
-  difficulty: 'easy',
-  question: "Start with 'COLD' and end at 'WARM', changing one letter at a time.",
-  hint: "Each step must form a valid English word. Try: COLD → CORD → WORD → WORM → WARM",
-  component: WordPuzzle,
-  config: {
-    word: 'COLD',
-    target: 'WARM',
-    type: 'wordchain',
-    chain: ['COLD', 'CORD', 'WORD', 'WORM', 'WARM']
-  }
-},
+  14: {
+    id: 14,
+    title: "Word Chain",
+    category: 'LOGIC',
+    difficulty: 'easy',
+    question: "Start with 'COLD' and end at 'WARM', changing one letter at a time.",
+    hint: "Each step must form a valid English word. Try: COLD → CORD → WORD → WORM → WARM",
+    component: WordPuzzle,
+    config: {
+      word: 'COLD',
+      target: 'WARM',
+      type: 'wordchain',
+      chain: ['COLD', 'CORD', 'WORD', 'WORM', 'WARM']
+    }
+  },
 
   // Level 15 - Math Puzzle
   15: {
@@ -274,17 +274,17 @@ const levels: Record<number, Level> = {
     title: "Hidden in Sight",
     category: 'KNOWLEDGE',
     difficulty: 'medium',
-    question: "Find the hidden word in the grid of letters",
+    question: "Find the hidden word 'BRAIN' in the grid of letters",
     hint: "The word can be hidden horizontally, vertically, or diagonally. Look carefully!",
     component: FindObjectsPuzzle,
     config: {
-      targetWord: 'HIDDEN',
+      targetWord: 'BRAIN',
       grid: [
-        ['H', 'Q', 'W', 'E', 'R'],
-        ['I', 'A', 'S', 'D', 'F'],
-        ['D', 'Z', 'X', 'C', 'V'],
-        ['D', 'B', 'N', 'M', 'L'],
-        ['E', 'N', 'K', 'J', 'H']
+        ['N', 'Q', 'W', 'E', 'R'],
+        ['I', 'I', 'S', 'D', 'F'],
+        ['D', 'Z', 'A', 'C', 'V'],
+        ['D', 'B', 'N', 'R', 'L'],
+        ['E', 'N', 'K', 'J', 'B']
       ]
     }
   },

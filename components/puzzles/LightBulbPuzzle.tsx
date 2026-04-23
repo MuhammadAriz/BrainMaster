@@ -15,6 +15,7 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
   
   // Initialize bulb states (all off)
   const [bulbStates, setBulbStates] = useState<boolean[]>(Array(numBulbs).fill(false));
+  const [bulbTapsTrack, setBulbTapsTrack] = useState<number[]>(Array(numBulbs).fill(0));
   
   // Track number of taps
   const [taps, setTaps] = useState(0);
@@ -37,13 +38,30 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
   const handleBulbPress = (index: number) => {
     setTaps(prev => prev + 1);
     
-    // Animate the glow effect
+    // Animate the glow effect briefly for feedback
     glowIntensity.value = withSequence(
-      withTiming(1, { duration: 300 }),
-      withTiming(0, { duration: 300 })
+      withTiming(1, { duration: 200 }),
+      withTiming(0, { duration: 200 })
     );
+
+    if (config?.warmUpTaps) {
+      setBulbTapsTrack(prev => {
+        const newTaps = [...prev];
+        newTaps[index] += 1;
+        
+        if (newTaps[index] >= config.warmUpTaps) {
+          setBulbStates(prevStates => {
+            const newStates = [...prevStates];
+            newStates[index] = true;
+            return newStates;
+          });
+        }
+        return newTaps;
+      });
+      return; // Skip normal toggle logic
+    }
     
-    // Toggle this bulb and adjacent bulbs
+    // Normal toggle logic: Toggle this bulb and adjacent bulbs
     setBulbStates(prevStates => {
       const newStates = [...prevStates];
       

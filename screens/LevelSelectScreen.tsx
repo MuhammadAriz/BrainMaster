@@ -4,6 +4,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { toast } from 'sonner-native';
+import { getLevelData } from '../utils/levelData';
 
 interface LevelData {
   id: number;
@@ -75,7 +77,19 @@ export default function LevelSelectScreen() {
                 styles.levelButton,
                 level.completed && styles.completedLevel
               ]}
-              onPress={() => navigation.navigate('GameLevel', { levelId: level.id })}
+              onPress={() => {
+                if (!getLevelData(level.id)) {
+                  toast.info('This level is currently in progress!', {
+                    duration: 2000,
+                    action: {
+                      label: 'Close',
+                      onClick: () => {}
+                    }
+                  });
+                  return;
+                }
+                navigation.navigate('GameLevel', { levelId: level.id });
+              }}
             >
               <Text style={styles.levelNumber}>{level.id}</Text>
               <Text style={styles.levelType}>{level.type}</Text>
