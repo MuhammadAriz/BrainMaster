@@ -62,11 +62,14 @@ export default function GameLevelScreen() {
   const handleSkip = () => {
     // Mark level as skipped with 1 star
     handleLevelProgress(1);
-    navigation.navigate('LevelSelect');
   };
 
   const handleGoHome = () => {
     navigation.navigate('Home');
+  };
+
+  const handleLevelSelect = () => {
+    navigation.navigate('LevelSelect');
   };
 
   const handleExit = () => {
@@ -147,6 +150,7 @@ export default function GameLevelScreen() {
         onNextLevel={handleNextLevel}
         onWatchAd={handleWatchAd}
         onExit={handleExit}
+        onLevelSelect={handleLevelSelect}
       >
         {React.createElement(levelData.component, {
           onComplete: handleLevelComplete,

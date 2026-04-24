@@ -141,15 +141,15 @@ const levels: Record<number, Level> = {
 
   10: {
     id: 10,
-    title: "Light Pattern",
+    title: "Warm Up",
     category: 'LOGIC',
     difficulty: 'medium',
-    question: "Create a specific pattern of lights",
-    hint: "The middle light needs to be activated last",
+    question: "Turn on all the bulbs. They might need a little warming up!",
+    hint: "Sometimes you need to warm up the bulb first. Try tapping it multiple times!",
     component: LightBulbPuzzle,
     config: {
-      pattern: true,
-      smallerSize: true
+      warmUpTaps: 4,
+      warmUpBulbs: [0, 4]
     }
   },
   // Level 11 - Odd One Out

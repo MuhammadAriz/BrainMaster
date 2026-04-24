@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { toast } from 'sonner-native';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 interface PuzzleLevelProps {
@@ -17,6 +17,7 @@ interface PuzzleLevelProps {
   onNextLevel: () => void;
   onWatchAd: () => void;
   onExit: () => void;
+  onLevelSelect?: () => void;
   children: React.ReactNode;
 }
 
@@ -55,6 +56,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
   onNextLevel,
   onWatchAd,
   onExit,
+  onLevelSelect,
   children
 }) => {
   const [bulbs, setBulbs] = useState(5); // Start with 5 bulbs
@@ -62,6 +64,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
   const [hintUsed, setHintUsed] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+  const [showSkipScreen, setShowSkipScreen] = useState(false);
   const [motivationalMessage, setMotivationalMessage] = useState('');
 
   useEffect(() => {
@@ -73,6 +76,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
   // Reset state when level changes
   useEffect(() => {
     setShowCompletionScreen(false);
+    setShowSkipScreen(false);
     setHintUsed(false);
     setShowHint(false);
     setCurrentHintIndex(0);
@@ -106,6 +110,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
   const handleSkip = () => {
     if (bulbs >= 3) {
       saveBulbs(bulbs - 3);
+      setShowSkipScreen(true);
       onSkip();
     } else {
       toast.error('Need 3 bulbs to skip! Complete more levels to earn bulbs.');
@@ -121,6 +126,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
 
   const handleNextLevel = () => {
     setShowCompletionScreen(false);
+    setShowSkipScreen(false);
     onNextLevel();
   };
 
@@ -135,6 +141,15 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
           >
             <MaterialCommunityIcons name="home" size={24} color="#fff" />
           </Pressable>
+          {onLevelSelect && (
+            <Pressable 
+              onPress={onLevelSelect} 
+              style={styles.iconButton}
+              accessibilityLabel="Go to level select"
+            >
+              <MaterialCommunityIcons name="view-grid" size={24} color="#fff" />
+            </Pressable>
+          )}
           <Text style={styles.levelText}>Level {level}</Text>
         </View>
         <View style={styles.headerRight}>
@@ -178,12 +193,12 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
           exiting={FadeOut}
           style={styles.hintContainer}
         >
-          <BlurView intensity={90} style={styles.hintBlur}>
+          <View style={styles.hintBlur}>
             <Text style={styles.hintText}>{hint}</Text>
             <Pressable onPress={() => setShowHint(false)} style={styles.closeHint}>
               <MaterialCommunityIcons name="close" size={24} color="#fff" />
             </Pressable>
-          </BlurView>
+          </View>
         </Animated.View>
       )}
 
@@ -193,7 +208,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
           exiting={FadeOut}
           style={styles.completionScreen}
         >
-          <BlurView intensity={90} style={styles.completionBlur}>
+          <View style={styles.completionBlur}>
             <Text style={styles.completionTitle}>Level Complete! 🎉</Text>
             <Text style={styles.motivationalMessage}>{motivationalMessage}</Text>
             
@@ -229,7 +244,38 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
                 <MaterialCommunityIcons name="exit-to-app" size={20} color="#fff" />
               </Pressable>
             </View>
-          </BlurView>
+          </View>
+        </Animated.View>
+      )}
+
+      {showSkipScreen && (
+        <Animated.View 
+          entering={FadeIn}
+          exiting={FadeOut}
+          style={styles.completionScreen}
+        >
+          <View style={styles.completionBlur}>
+            <Text style={styles.completionTitle}>Level Skipped ⏭️</Text>
+            <Text style={styles.motivationalMessage}>Sometimes it's better to move on and come back later!</Text>
+            
+            <View style={styles.buttonContainer}>
+              <Pressable 
+                style={[styles.actionButton, styles.nextButton]} 
+                onPress={handleNextLevel}
+              >
+                <Text style={styles.buttonText}>Next Level</Text>
+                <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
+              </Pressable>
+              
+              <Pressable 
+                style={[styles.actionButton, styles.exitButton]} 
+                onPress={onExit}
+              >
+                <Text style={styles.buttonText}>Exit</Text>
+                <MaterialCommunityIcons name="exit-to-app" size={20} color="#fff" />
+              </Pressable>
+            </View>
+          </View>
         </Animated.View>
       )}
     </View>
@@ -307,6 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     width: '90%',
     alignItems: 'center',
+    backgroundColor: 'rgba(30, 30, 30, 0.95)',
   },
   hintText: {
     color: '#fff',
@@ -356,6 +403,7 @@ const styles = StyleSheet.create({
     width: '95%',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(30, 30, 30, 0.95)',
   },
   completionTitle: {
     fontSize: 32,

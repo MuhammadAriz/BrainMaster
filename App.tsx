@@ -1,6 +1,13 @@
+  import 'react-native-gesture-handler';
+  import React, { useEffect } from 'react';
+  import { GestureHandlerRootView } from 'react-native-gesture-handler';
   import { NavigationContainer } from '@react-navigation/native';
   import { createNativeStackNavigator } from '@react-navigation/native-stack';
   import { StyleSheet } from 'react-native';
+  import * as SplashScreen from 'expo-splash-screen';
+
+  // Keep the splash screen visible while we fetch resources
+  SplashScreen.preventAutoHideAsync();
   import { SafeAreaProvider } from 'react-native-safe-area-context';
   import { Toaster } from 'sonner-native';
   import HomeScreen from './screens/HomeScreen';
@@ -20,28 +27,46 @@
   }
   
   export default function App() {
+    useEffect(() => {
+      // Hide splash screen once the app component mounts
+      async function prepare() {
+        try {
+          // Pre-load fonts or make API calls here if needed in the future
+        } catch (e) {
+          console.warn(e);
+        } finally {
+          await SplashScreen.hideAsync();
+        }
+      }
+      prepare();
+    }, []);
+
     return (
-      <SafeAreaProvider style={styles.container}>
-        <NavigationContainer>
-          <RootStack />
-        </NavigationContainer>
-        <Toaster
-          position="top-center"
-          visibleToasts={1}
-          toastOptions={{
-            styles: {
-              error: {
-                backgroundColor: '#4E0A0A',
-                borderWidth: 1,
-                borderColor: '#FF6B6B',
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider style={styles.container}>
+          <NavigationContainer>
+            <RootStack />
+          </NavigationContainer>
+          <Toaster
+            position="bottom-center"
+            duration={2000}
+            closeButton={true}
+            visibleToasts={1}
+            toastOptions={{
+              styles: {
+                error: {
+                  backgroundColor: '#4E0A0A',
+                  borderWidth: 1,
+                  borderColor: '#FF6B6B',
+                },
+                title: {
+                  color: 'white',
+                },
               },
-              title: {
-                color: 'white',
-              },
-            },
-          }}
-        />
-      </SafeAreaProvider>
+            }}
+          />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
   

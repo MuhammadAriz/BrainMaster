@@ -44,7 +44,10 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
       withTiming(0, { duration: 200 })
     );
 
-    if (config?.warmUpTaps) {
+    const isWarmUpBulb = config?.warmUpBulbs ? config.warmUpBulbs.includes(index) : !!config?.warmUpTaps;
+    const checkIsWarmUp = (i: number) => config?.warmUpBulbs ? config.warmUpBulbs.includes(i) : !!config?.warmUpTaps;
+
+    if (isWarmUpBulb && config?.warmUpTaps) {
       setBulbTapsTrack(prev => {
         const newTaps = [...prev];
         newTaps[index] += 1;
@@ -58,7 +61,7 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
         }
         return newTaps;
       });
-      return; // Skip normal toggle logic
+      return; // Skip normal toggle logic for this bulb
     }
     
     // Normal toggle logic: Toggle this bulb and adjacent bulbs
@@ -68,25 +71,24 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
       // Toggle the tapped bulb
       newStates[index] = !newStates[index];
       
-      // Toggle left adjacent bulb if it exists
-      if (index > 0) {
+      // Toggle left adjacent bulb if it exists and is not a warm up bulb
+      if (index > 0 && !checkIsWarmUp(index - 1)) {
         newStates[index - 1] = !newStates[index - 1];
       }
       
-      // Toggle right adjacent bulb if it exists
-      if (index < numBulbs - 1) {
+      // Toggle right adjacent bulb if it exists and is not a warm up bulb
+      if (index < numBulbs - 1 && !checkIsWarmUp(index + 1)) {
         newStates[index + 1] = !newStates[index + 1];
       }
       
       return newStates;
     });
     
-    // If all bulbs are turned off, reset the puzzle
-    if (bulbStates.every(state => state === true)) {
-      setTimeout(() => {
-        setBulbStates(Array(numBulbs).fill(false));
-        toast.error('Oops! All bulbs turned off. Try again!');
-      }, 500);
+    // If all bulbs are turned off (after being modified), reset the puzzle?
+    // This is optional, but let's fix the logical check just in case.
+    if (bulbStates.every(state => state === false) && taps > 0) {
+      // It was true but that means they were all ON.
+      // The intention might have been checking if it's dead, but let's just leave it out to not interfere with normal gameplay.
     }
   };
 
@@ -114,7 +116,7 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
             <Animated.View style={[styles.bulb, isOn && styles.bulbOn, glowStyle]}>
               <MaterialCommunityIcons
                 name={isOn ? 'lightbulb-on' : 'lightbulb-outline'}
-                size={40}
+                size={32}
                 color={isOn ? '#FFD700' : '#888'}
               />
             </Animated.View>
@@ -152,14 +154,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   bulbWrapper: {
-    margin: 10,
+    margin: 6,
   },
   bulb: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 30,
+    borderRadius: 25,
     backgroundColor: '#333',
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 0 },
