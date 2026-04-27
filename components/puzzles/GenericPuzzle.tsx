@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+
 
 interface GenericPuzzleProps {
   type: string;
@@ -33,13 +33,9 @@ export const GenericPuzzle: React.FC<GenericPuzzleProps> = ({ type, config, onCo
   };
 
   return (
-    <Animated.View 
-      entering={FadeIn}
-      style={styles.container}
-    >
-      {/* Render puzzle based on type */}
+    <View style={styles.container}>
       {renderPuzzle(type, config, handleAnswer)}
-    </Animated.View>
+    </View>
   );
 };
 

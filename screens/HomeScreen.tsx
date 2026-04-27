@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, BackHandler, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
 
 export default function HomeScreen() {
@@ -10,17 +9,15 @@ export default function HomeScreen() {
 
   const handleExit = () => {
     if (Platform.OS === 'web') {
-      // For web, we can't actually exit the app, so we'll just show a message
       toast.info("Thanks for playing Brain Master!");
     } else {
-      // For native platforms, we can exit the app
       BackHandler.exitApp();
     }
   };
 
   return (
     <View style={styles.container}>
-      <Animated.View entering={FadeIn.duration(1000)} style={styles.content}>
+      <View style={styles.content}>
         <Text style={styles.title}>Brain Master</Text>
         <Text style={styles.subtitle}>Challenge Your Mind</Text>
         
@@ -46,7 +43,7 @@ export default function HomeScreen() {
             <MaterialCommunityIcons name="exit-to-app" size={24} color="#fff" />
           </Pressable>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 }

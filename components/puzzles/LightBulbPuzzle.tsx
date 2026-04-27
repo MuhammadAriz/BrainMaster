@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming, useSharedValue } from 'react-native-reanimated';
 
 interface LightBulbPuzzleProps {
   onComplete: () => void;
@@ -17,11 +16,8 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
   const [bulbStates, setBulbStates] = useState<boolean[]>(Array(numBulbs).fill(false));
   const [bulbTapsTrack, setBulbTapsTrack] = useState<number[]>(Array(numBulbs).fill(0));
   
-  // Track number of taps
   const [taps, setTaps] = useState(0);
-  
-  // Animation value for bulb glow
-  const glowIntensity = useSharedValue(0);
+  const [flashIndex, setFlashIndex] = useState<number | null>(null);
 
   // Check if all bulbs are on
   useEffect(() => {
@@ -34,15 +30,11 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
     }
   }, [bulbStates]);
 
-  // Handle bulb tap
   const handleBulbPress = (index: number) => {
     setTaps(prev => prev + 1);
-    
-    // Animate the glow effect briefly for feedback
-    glowIntensity.value = withSequence(
-      withTiming(1, { duration: 200 }),
-      withTiming(0, { duration: 200 })
-    );
+    // Brief flash feedback using plain state
+    setFlashIndex(index);
+    setTimeout(() => setFlashIndex(null), 200);
 
     const isWarmUpBulb = config?.warmUpBulbs ? config.warmUpBulbs.includes(index) : !!config?.warmUpTaps;
     const checkIsWarmUp = (i: number) => config?.warmUpBulbs ? config.warmUpBulbs.includes(i) : !!config?.warmUpTaps;
@@ -92,18 +84,8 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
     }
   };
 
-  // Animated style for the glow effect
-  const glowStyle = useAnimatedStyle(() => {
-    return {
-      shadowOpacity: glowIntensity.value * 0.8,
-    };
-  });
-
   return (
-    <Animated.View 
-      entering={FadeIn}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <Text style={styles.instruction}>Turn on all the bulbs!</Text>
       
       <View style={styles.bulbsContainer}>
@@ -113,19 +95,23 @@ export const LightBulbPuzzle: React.FC<LightBulbPuzzleProps> = ({ onComplete, co
             style={styles.bulbWrapper}
             onPress={() => handleBulbPress(index)}
           >
-            <Animated.View style={[styles.bulb, isOn && styles.bulbOn, glowStyle]}>
+            <View style={[
+              styles.bulb,
+              isOn && styles.bulbOn,
+              flashIndex === index && styles.bulbFlash
+            ]}>
               <MaterialCommunityIcons
                 name={isOn ? 'lightbulb-on' : 'lightbulb-outline'}
                 size={32}
                 color={isOn ? '#FFD700' : '#888'}
               />
-            </Animated.View>
+            </View>
           </Pressable>
         ))}
       </View>
       
       <Text style={styles.tapsCount}>Taps: {taps}</Text>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -170,6 +156,9 @@ const styles = StyleSheet.create({
   },
   bulbOn: {
     backgroundColor: '#444',
+  },
+  bulbFlash: {
+    backgroundColor: '#665500',
   },
   tapsCount: {
     fontSize: 16,

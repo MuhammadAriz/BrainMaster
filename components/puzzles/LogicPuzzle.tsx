@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+
 
 interface LogicPuzzleProps {
   onComplete: () => void;
@@ -61,10 +61,7 @@ export const LogicPuzzle: React.FC<LogicPuzzleProps> = ({ onComplete, config }) 
   };
 
   return (
-    <Animated.View 
-      entering={FadeIn}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <Text style={styles.instruction}>Find the odd one out:</Text>
       <View style={styles.grid}>
         {items.map((item) => (
@@ -80,7 +77,7 @@ export const LogicPuzzle: React.FC<LogicPuzzleProps> = ({ onComplete, config }) 
           </Pressable>
         ))}
       </View>
-    </Animated.View>
+    </View>
   );
 };
 

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming, useSharedValue } from 'react-native-reanimated';
 
 interface ColorPuzzleProps {
   onComplete: () => void;
@@ -16,49 +14,41 @@ export const ColorPuzzle: React.FC<ColorPuzzleProps> = ({ onComplete, config }) 
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [showingPattern, setShowingPattern] = useState(true);
   const [patternIndex, setPatternIndex] = useState(0);
+  const [highlightedColor, setHighlightedColor] = useState<string | null>(null);
   
-  // Default colors and sequence if not provided in config
+  // Default colors and sequence
   const colors = config?.colors || ['#FF0000', '#00FF00', '#0000FF', '#FFFF00'];
   const correctSequence = config?.correctSequence || ['#FF0000', '#0000FF', '#FFFF00'];
   
-  // Animation value for highlighting
-  const highlight = useSharedValue(0);
-
-  // Show the pattern at the start
+  // Display the pattern at the start
   useEffect(() => {
-    // Display the pattern sequence
-    const showPattern = () => {
-      if (patternIndex < correctSequence.length) {
-        // Highlight the current color in the sequence
-        highlight.value = withSequence(
-          withTiming(1, { duration: 300 }),
-          withTiming(0, { duration: 300 })
-        );
+    if (!showingPattern) return;
+
+    if (patternIndex < correctSequence.length) {
+      const timer = setTimeout(() => {
+        setHighlightedColor(correctSequence[patternIndex]);
         
-        // Move to the next color after a delay
+        // Hide highlight after 400ms
         setTimeout(() => {
-          setPatternIndex(patternIndex + 1);
-        }, 800);
-      } else {
-        // Pattern display complete
-        setShowingPattern(false);
-        setPatternIndex(0);
-        toast.info('Now repeat the pattern!');
-      }
-    };
-    
-    if (showingPattern) {
-      showPattern();
+          setHighlightedColor(null);
+          setPatternIndex(prev => prev + 1);
+        }, 400);
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setShowingPattern(false);
+      setPatternIndex(0);
+      toast.info('Now repeat the pattern!');
     }
   }, [patternIndex, showingPattern]);
 
   const handleColorPress = (color: string) => {
-    if (showingPattern) return; // Don't allow input while showing pattern
+    if (showingPattern) return;
     
     const newColors = [...selectedColors, color];
     setSelectedColors(newColors);
 
-    // Check if the sequence is correct so far
     const isCorrectSoFar = newColors.every((c, i) => c === correctSequence[i]);
     
     if (!isCorrectSoFar) {
@@ -71,17 +61,9 @@ export const ColorPuzzle: React.FC<ColorPuzzleProps> = ({ onComplete, config }) 
       toast.success('Correct pattern!');
       setTimeout(() => {
         onComplete();
-      }, 1000);
+      }, 800);
     }
   };
-
-  // Animated style for the highlighted color
-  const highlightStyle = useAnimatedStyle(() => {
-    return {
-      opacity: highlight.value * 0.7 + 0.3,
-      transform: [{ scale: highlight.value * 0.2 + 1 }],
-    };
-  });
 
   return (
     <View style={styles.container}>
@@ -96,34 +78,29 @@ export const ColorPuzzle: React.FC<ColorPuzzleProps> = ({ onComplete, config }) 
             style={[
               styles.colorSlot,
               selectedColors[i] && { backgroundColor: selectedColors[i] },
-              showingPattern && patternIndex === i && { borderColor: '#fff', borderWidth: 3 }
+              showingPattern && patternIndex === i && styles.activeSlot
             ]}
           />
         ))}
       </View>
       
       <View style={styles.colorPicker}>
-        {colors.map((color) => (
-          <Pressable
-            key={color}
-            style={[
-              styles.colorButton, 
-              { backgroundColor: color },
-              showingPattern && correctSequence[patternIndex] === color && { transform: [{ scale: 1.2 }] }
-            ]}
-            onPress={() => handleColorPress(color)}
-          >
-            {showingPattern && correctSequence[patternIndex] === color && (
-              <Animated.View 
-                style={[
-                  StyleSheet.absoluteFill, 
-                  { backgroundColor: color, borderRadius: 20 },
-                  highlightStyle
-                ]} 
-              />
-            )}
-          </Pressable>
-        ))}
+        {colors.map((color) => {
+          const isHighlighted = highlightedColor === color;
+          return (
+            <Pressable
+              key={color}
+              style={[
+                styles.colorButton, 
+                { backgroundColor: color },
+                isHighlighted && styles.highlightedButton
+              ]}
+              onPress={() => handleColorPress(color)}
+            >
+              {isHighlighted && <View style={styles.glow} />}
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -133,12 +110,12 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     alignItems: 'center',
-    gap: 40,
+    gap: 30,
   },
   instruction: {
     fontSize: 20,
     color: '#fff',
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: 'center',
   },
   selectedColors: {
@@ -146,25 +123,40 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   colorSlot: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
     backgroundColor: '#333',
     borderWidth: 2,
     borderColor: '#555',
   },
+  activeSlot: {
+    borderColor: '#fff',
+    borderWidth: 3,
+  },
   colorPicker: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 12,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   colorButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     borderWidth: 2,
     borderColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
+  highlightedButton: {
+    transform: [{ scale: 1.15 }],
+    borderWidth: 4,
+    borderColor: '#fff',
+  },
+  glow: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  }
 });

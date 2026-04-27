@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface CountingPuzzleProps {
   onComplete: () => void;
@@ -15,19 +14,19 @@ interface CountingPuzzleProps {
 export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, config }) => {
   const [attempts, setAttempts] = useState(0);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
-  
+
   const correctAnswer = config?.correctAnswer || 15;
   const numbers = config?.numbers || [8, 10, 13, 15, 18];
 
   const handleNumberPress = (number: number) => {
     setSelectedNumber(number);
     setAttempts(prev => prev + 1);
-    
+
     if (number === correctAnswer) {
       toast.success('Correct! You found all the triangles!');
       setTimeout(() => {
         onComplete();
-      }, 1000);
+      }, 800);
     } else {
       toast.error('Not quite! Look more carefully...');
       setTimeout(() => {
@@ -37,60 +36,25 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
   };
 
   return (
-    <Animated.View 
-      entering={FadeIn}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <Text style={styles.instruction}>How many triangles can you find?</Text>
-      
+
       <View style={styles.triangleContainer}>
         <Svg height="220" width="220" viewBox="0 0 100 100">
           {/* Large outer triangle */}
-          <Path
-            d="M10,90 L50,10 L90,90 Z"
-            fill="none"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
-          
+          <Path d="M10,90 L50,10 L90,90 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
           {/* Medium triangles */}
-          <Path
-            d="M30,50 L50,10 L70,50 Z"
-            fill="none"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
-          <Path
-            d="M10,90 L50,50 L30,90 Z"
-            fill="none"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
-          <Path
-            d="M50,50 L70,90 L90,90 Z"
-            fill="none"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
-          
+          <Path d="M30,50 L50,10 L70,50 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
+          <Path d="M10,90 L50,50 L30,90 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
+          <Path d="M50,50 L70,90 L90,90 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
           {/* Small triangles */}
-          <Path
-            d="M30,50 L50,30 L50,50 Z"
-            fill="none"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
-          <Path
-            d="M50,30 L70,50 L50,50 Z"
-            fill="none"
-            stroke="#FFD700"
-            strokeWidth="2"
-          />
+          <Path d="M30,50 L50,30 L50,50 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
+          <Path d="M50,30 L70,50 L50,50 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
         </Svg>
       </View>
-      
+
       <Text style={styles.subInstruction}>Select the total number of triangles:</Text>
-      
+
       <View style={styles.numbersContainer}>
         {numbers.map((number) => (
           <Pressable
@@ -109,7 +73,7 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
       {attempts > 0 && (
         <Text style={styles.attemptsText}>Attempts: {attempts}</Text>
       )}
-    </Animated.View>
+    </View>
   );
 };
 

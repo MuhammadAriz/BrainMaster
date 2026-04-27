@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 interface MathPuzzleProps {
   onComplete: () => void;
@@ -25,8 +24,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   const [result, setResult] = useState<number | null>(null);
   const [userSolution, setUserSolution] = useState<Record<string, string>>({});
   const [solvedEmojis, setSolvedEmojis] = useState<string[]>([]);
-  
-  const scale = useSharedValue(1);
+  const [isCorrect, setIsCorrect] = useState(false);
   
   const operators = ['+', '-', '×', '÷'];
   
@@ -37,15 +35,12 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
           .map(item => typeof item === 'string' ? item.replace('×', '*').replace('÷', '/') : item)
           .join('');
         
+        // Note: In production apps, avoid eval(). For a game puzzle, we keep it simple or use a math parser.
         const calculatedResult = eval(evalEquation);
         setResult(calculatedResult);
         
         if (calculatedResult === target && selectedNumbers.length === numbers.length) {
-          scale.value = withSpring(1.2, { damping: 10 });
-          setTimeout(() => {
-            scale.value = withSpring(1);
-          }, 300);
-          
+          setIsCorrect(true);
           toast.success(`Great job! You made ${target}!`);
           setTimeout(() => {
             onComplete();
@@ -60,6 +55,8 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   }, [equation]);
   
   const handleNumberPress = (num: number) => {
+    if (isCorrect) return;
+    
     if (selectedNumbers.includes(num)) {
       const numIndex = selectedNumbers.indexOf(num);
       const newEquation = [...equation];
@@ -102,6 +99,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   };
   
   const handleOperatorPress = (op: string) => {
+    if (isCorrect) return;
     if (equation.length === 0) {
       toast.error('Please select a number first.');
       return;
@@ -120,16 +118,11 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   };
   
   const handleClear = () => {
+    if (isCorrect) return;
     setEquation([]);
     setSelectedNumbers([]);
     setResult(null);
   };
-  
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-    };
-  });
   
   const renderEquationPuzzle = () => (
     <View style={styles.puzzleContainer}>
@@ -150,23 +143,23 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         {result !== null && (
           <View style={styles.resultContainer}>
             <Text style={styles.equalsText}>=</Text>
-            <Animated.Text 
+            <Text 
               style={[
                 styles.resultText, 
                 result === target && selectedNumbers.length === numbers.length ? styles.correctResult : styles.incorrectResult,
-                animatedStyle
+                isCorrect && styles.successScale
               ]}
             >
               {result}
-            </Animated.Text>
+            </Text>
           </View>
         )}
       </View>
       
       <View style={styles.numbersContainer}>
-        {numbers.map((num) => (
+        {numbers.map((num, i) => (
           <Pressable
-            key={num}
+            key={`${num}-${i}`}
             style={[
               styles.numberButton,
               selectedNumbers.includes(num) && styles.selectedNumber
@@ -216,14 +209,13 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         setSolvedEmojis(newSolvedEmojis);
 
         if (allCorrect) {
+            setIsCorrect(true);
             toast.success('Congratulations! You solved it!');
             setTimeout(() => {
                 onComplete();
             }, 1000);
-        } else if (newSolvedEmojis.length > 0) {
-             toast.error('Some are correct. Keep trying!');
         } else {
-            toast.error('Not quite, check your answers.');
+            toast.error('Check your answers again!');
         }
     };
     
@@ -270,10 +262,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   };
 
   return (
-    <Animated.View 
-      entering={FadeIn}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <Text style={styles.instruction}>
         {puzzleType === 'equation' 
           ? `Create an equation that equals ${target} using all numbers provided`
@@ -281,20 +270,22 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
       </Text>
       
       {puzzleType === 'equation' ? renderEquationPuzzle() : renderEmojiPuzzle()}
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 10,
     alignItems: 'center',
+    width: '100%',
   },
   instruction: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#fff',
-    marginBottom: 20,
+    marginBottom: 15,
     textAlign: 'center',
+    lineHeight: 24,
   },
   puzzleContainer: {
     alignItems: 'center',
@@ -306,35 +297,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#333',
     borderRadius: 10,
-    padding: 15,
-    minHeight: 60,
-    marginBottom: 30,
+    padding: 10,
+    minHeight: 50,
+    marginBottom: 20,
     flexWrap: 'wrap',
+    width: '100%',
   },
   equationText: {
     color: '#fff',
-    fontSize: 24,
-    marginHorizontal: 5,
+    fontSize: 22,
+    marginHorizontal: 3,
   },
   placeholderText: {
     color: '#888',
-    fontSize: 16,
+    fontSize: 14,
     fontStyle: 'italic',
   },
   resultContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
+    marginLeft: 5,
   },
   equalsText: {
     color: '#fff',
-    fontSize: 24,
-    marginHorizontal: 5,
+    fontSize: 22,
+    marginHorizontal: 3,
   },
   resultText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginLeft: 5,
+    marginLeft: 3,
   },
   correctResult: {
     color: '#4CAF50',
@@ -342,18 +334,21 @@ const styles = StyleSheet.create({
   incorrectResult: {
     color: '#F44336',
   },
+  successScale: {
+    transform: [{ scale: 1.2 }],
+  },
   numbersContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
+    gap: 8,
   },
   numberButton: {
-    width: 60,
-    height: 60,
+    width: 54,
+    height: 54,
     backgroundColor: '#444',
-    margin: 5,
-    borderRadius: 30,
+    borderRadius: 27,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -365,33 +360,33 @@ const styles = StyleSheet.create({
   },
   numberText: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   operatorsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
+    gap: 8,
   },
   operatorButton: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     backgroundColor: '#FF9800',
-    margin: 5,
-    borderRadius: 25,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   operatorText: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
   },
   clearButton: {
     backgroundColor: '#F44336',
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    paddingHorizontal: 25,
+    borderRadius: 20,
   },
   clearText: {
     color: '#fff',
@@ -399,9 +394,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
    numbersUsedText: {
-    color: '#888',
-    fontSize: 16,
-    marginBottom: 10,
+    color: '#aaa',
+    fontSize: 14,
+    marginBottom: 8,
   },
   emojiContainer: {
     width: '100%',
@@ -411,53 +406,55 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 15,
+    marginBottom: 10,
     backgroundColor: '#333',
-    padding: 10,
-    borderRadius: 10,
+    padding: 8,
+    borderRadius: 8,
+    width: '90%',
   },
   emojiText: {
-    fontSize: 28,
-    marginHorizontal: 5,
+    fontSize: 24,
+    marginHorizontal: 3,
   },
   emojiOperator: {
     color: '#fff',
-    fontSize: 24,
-    marginHorizontal: 5,
+    fontSize: 20,
+    marginHorizontal: 3,
   },
   emojiEquals: {
     color: '#fff',
-    fontSize: 24,
-    marginHorizontal: 10,
+    fontSize: 20,
+    marginHorizontal: 8,
   },
   emojiResult: {
     color: '#4CAF50',
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   emojiSolution: {
-    marginTop: 30,
+    marginTop: 20,
     alignItems: 'center',
+    width: '100%',
   },
   emojiQuestion: {
     color: '#fff',
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 16,
+    marginBottom: 15,
   },
   emojiValueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 10,
   },
   emojiInput: {
-    width: 60,
-    height: 60,
+    width: 54,
+    height: 48,
     backgroundColor: '#444',
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 2,
     borderColor: '#555',
     color: '#fff',
-    fontSize: 24,
+    fontSize: 20,
     textAlign: 'center',
   },
   correctInput: {
@@ -467,28 +464,13 @@ const styles = StyleSheet.create({
   checkButton: {
       backgroundColor: '#4CAF50',
       paddingVertical: 12,
-      paddingHorizontal: 30,
+      paddingHorizontal: 40,
       borderRadius: 25,
-      marginTop: 20,
+      marginTop: 15,
   },
   checkButtonText: {
       color: '#fff',
       fontSize: 18,
       fontWeight: 'bold',
-  },
-  emojiValueButton: {
-    width: 50,
-    height: 50,
-    backgroundColor: '#444',
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#555',
-  },
-  emojiValueText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
   },
 });

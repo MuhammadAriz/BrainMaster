@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
-import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming, useSharedValue } from 'react-native-reanimated';
 
 interface NumberSeriesPuzzleProps {
   onComplete: () => void;
@@ -18,7 +17,6 @@ export const NumberSeriesPuzzle: React.FC<NumberSeriesPuzzleProps> = ({ onComple
   const [attempts, setAttempts] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
   
-  // Default config if none provided
   const defaultConfig = {
     series: [2, 4, 8, 16],
     answer: 32,
@@ -27,57 +25,34 @@ export const NumberSeriesPuzzle: React.FC<NumberSeriesPuzzleProps> = ({ onComple
   
   const { series, answer, options } = config || defaultConfig;
   
-  // Animation values
-  const scaleValue = useSharedValue(1);
-  
   useEffect(() => {
     if (isCorrect) {
-      // Delay to show the success state before completing
       const timer = setTimeout(() => {
         onComplete();
-      }, 1500);
-      
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [isCorrect]);
   
   const handleOptionSelect = (option: number) => {
+    if (isCorrect) return;
+    
     setSelectedOption(option);
     setAttempts(prev => prev + 1);
     
     if (option === answer) {
-      // Correct answer
       setIsCorrect(true);
       toast.success('Correct! You found the pattern!');
-      
-      // Animate the correct answer
-      scaleValue.value = withSequence(
-        withTiming(1.2, { duration: 200 }),
-        withTiming(1, { duration: 200 })
-      );
     } else {
-      // Wrong answer
       toast.error('Not quite right. Try again!');
-      
-      // Reset selection after a delay
       setTimeout(() => {
         setSelectedOption(null);
       }, 1000);
     }
   };
   
-  // Animated style for the selected option
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scaleValue.value }]
-    };
-  });
-  
   return (
-    <Animated.View 
-      entering={FadeIn}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <Text style={styles.instruction}>Find the next number in the sequence:</Text>
       
       <View style={styles.seriesContainer}>
@@ -105,9 +80,9 @@ export const NumberSeriesPuzzle: React.FC<NumberSeriesPuzzleProps> = ({ onComple
             disabled={isCorrect}
           >
             {selectedOption === option && isCorrect && (
-              <Animated.View style={[styles.checkIcon, animatedStyle]}>
-                <MaterialCommunityIcons name="check" size={24} color="#fff" />
-              </Animated.View>
+              <View style={styles.checkIcon}>
+                <MaterialCommunityIcons name="check" size={20} color="#fff" />
+              </View>
             )}
             <Text style={styles.optionText}>{option}</Text>
           </Pressable>
@@ -115,26 +90,27 @@ export const NumberSeriesPuzzle: React.FC<NumberSeriesPuzzleProps> = ({ onComple
       </View>
       
       <Text style={styles.attemptsText}>Attempts: {attempts}</Text>
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
   instruction: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#fff',
     marginBottom: 20,
     textAlign: 'center',
+    lineHeight: 24,
   },
   subInstruction: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#aaa',
-    marginTop: 30,
+    marginTop: 20,
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -142,35 +118,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   numberBox: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#333',
     borderRadius: 8,
-    margin: 5,
   },
   questionBox: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#444',
     borderRadius: 8,
-    margin: 5,
     borderWidth: 2,
     borderColor: '#FFD700',
   },
   seriesNumber: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#fff',
     fontWeight: 'bold',
   },
   questionMark: {
-    fontSize: 28,
+    fontSize: 24,
     color: '#FFD700',
     fontWeight: 'bold',
   },
@@ -178,16 +154,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    marginTop: 10,
+    gap: 12,
   },
   optionBox: {
-    width: 70,
-    height: 70,
+    width: 65,
+    height: 65,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#333',
     borderRadius: 10,
-    margin: 10,
+    position: 'relative',
   },
   selectedOption: {
     backgroundColor: '#555',
@@ -198,21 +174,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   optionText: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#fff',
     fontWeight: 'bold',
   },
   checkIcon: {
     position: 'absolute',
-    top: -10,
-    right: -10,
+    top: -8,
+    right: -8,
     backgroundColor: '#4CAF50',
     borderRadius: 12,
     padding: 2,
+    zIndex: 1,
   },
   attemptsText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#888',
-    marginTop: 20,
+    marginTop: 25,
   },
 });
