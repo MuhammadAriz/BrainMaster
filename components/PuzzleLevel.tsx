@@ -8,6 +8,7 @@ interface PuzzleLevelProps {
   level: number;
   question: string;
   hint: string;
+  hints?: string[];
   isComplete?: boolean;
   onComplete: () => void;
   onSkip: () => void;
@@ -40,6 +41,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
   level,
   question,
   hint,
+  hints,
   isComplete = false,
   onComplete,
   onSkip,
@@ -52,6 +54,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
 }) => {
   const [bulbs, setBulbs] = useState(5);
   const [showHint, setShowHint] = useState(false);
+  const [hintStep, setHintStep] = useState(0);
   const [hintUsed, setHintUsed] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
   const [showSkipScreen, setShowSkipScreen] = useState(false);
@@ -155,18 +158,33 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
         {children}
       </View>
 
-      {/* Hint overlay — plain View, NO Animated.View entering/exiting */}
-      {showHint && (
-        <View style={styles.overlay}>
-          <View style={styles.popupCard}>
-            <Text style={styles.popupTitle}>💡 Hint</Text>
-            <Text style={styles.hintText}>{hint}</Text>
-            <Pressable onPress={() => setShowHint(false)} style={styles.closeBtn}>
-              <MaterialCommunityIcons name="close" size={22} color="#fff" />
-            </Pressable>
+      {/* HINT OVERLAY — multi-step if hints[] provided */}
+      {showHint && (() => {
+        const hintList = hints && hints.length > 0 ? hints : [hint];
+        const currentHint = hintList[hintStep] || hintList[hintList.length - 1];
+        const hasMore = hintStep < hintList.length - 1;
+        return (
+          <View style={styles.overlay}>
+            <View style={styles.popupCard}>
+              <Text style={styles.popupTitle}>
+                💡 Hint {hintList.length > 1 ? `(${hintStep + 1}/${hintList.length})` : ''}
+              </Text>
+              <Text style={styles.hintText}>{currentHint}</Text>
+              {hasMore && (
+                <Pressable
+                  style={styles.nextHintBtn}
+                  onPress={() => setHintStep(s => s + 1)}
+                >
+                  <Text style={styles.nextHintText}>Next Hint →</Text>
+                </Pressable>
+              )}
+              <Pressable onPress={() => { setShowHint(false); setHintStep(0); }} style={styles.closeBtn}>
+                <MaterialCommunityIcons name="close" size={22} color="#fff" />
+              </Pressable>
+            </View>
           </View>
-        </View>
-      )}
+        );
+      })()}
 
       {/* Completion popup — plain View, NO Animated.View */}
       {showCompletionScreen && (
@@ -380,5 +398,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  nextHintBtn: {
+    backgroundColor: '#1565C0',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 12,
+    alignSelf: 'center',
+  },
+  nextHintText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  hintText: {
+    color: '#ccc',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 8,
   },
 });

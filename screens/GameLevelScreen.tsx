@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, BackHandler, Text, Pressable } from 'react-native';
+import { View, StyleSheet, BackHandler, Text, Pressable, Keyboard } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -33,6 +33,7 @@ export default function GameLevelScreen() {
 
   const handleLevelComplete = async () => {
     setIsComplete(true);
+    Keyboard.dismiss();
     
     try {
       // Award bonus bulb if no hint was used

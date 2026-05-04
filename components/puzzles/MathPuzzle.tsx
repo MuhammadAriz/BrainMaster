@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Keyboard } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
 
@@ -42,6 +42,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         if (calculatedResult === target && selectedNumbers.length === numbers.length) {
           setIsCorrect(true);
           toast.success(`Great job! You made ${target}!`);
+          Keyboard.dismiss();
           setTimeout(() => {
             onComplete();
           }, 1000);
@@ -211,6 +212,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         if (allCorrect) {
             setIsCorrect(true);
             toast.success('Congratulations! You solved it!');
+            Keyboard.dismiss();
             setTimeout(() => {
                 onComplete();
             }, 1000);

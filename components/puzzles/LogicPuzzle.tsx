@@ -54,8 +54,11 @@ export const LogicPuzzle: React.FC<LogicPuzzleProps> = ({ onComplete, config }) 
           <View style={[styles.triangle, { borderBottomColor: item.color }]} />
         </View>
       );
+    } else if (item.shape === 'icon') {
+      return <MaterialCommunityIcons name={item.icon || 'arrow-right'} size={42} color={item.color} />;
+    } else if (item.shape === 'emoji') {
+      return <Text style={{ fontSize: 34 }}>{item.emoji || '❓'}</Text>;
     } else {
-      // Default to circle
       return <View style={[styles.shape, { borderRadius: 25, backgroundColor: item.color }]} />;
     }
   };

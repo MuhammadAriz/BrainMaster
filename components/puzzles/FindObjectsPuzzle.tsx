@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { toast } from 'sonner-native';
 
 interface FindObjectsPuzzleProps {
   onComplete: () => void;
@@ -10,262 +10,128 @@ interface FindObjectsPuzzleProps {
   };
 }
 
-export const FindObjectsPuzzle: React.FC<FindObjectsPuzzleProps> = ({
-  onComplete,
-  config
-}) => {
+export const FindObjectsPuzzle: React.FC<FindObjectsPuzzleProps> = ({ onComplete, config }) => {
   const targetWord = config?.targetWord || 'BRAIN';
+
+  // Default grid — BRAIN hidden diagonally top-left to bottom-right
   const grid = config?.grid || [
-    ['B', 'Q', 'W', 'E', 'R'],
-    ['I', 'R', 'S', 'D', 'F'],
-    ['D', 'Z', 'A', 'C', 'V'],
-    ['D', 'B', 'N', 'I', 'L'],
-    ['E', 'N', 'K', 'J', 'N']
+    ['B', 'K', 'P', 'M', 'Z'],
+    ['T', 'R', 'W', 'Q', 'X'],
+    ['V', 'S', 'A', 'J', 'C'],
+    ['N', 'L', 'U', 'I', 'F'],
+    ['G', 'H', 'E', 'O', 'N'],
   ];
-  const [selectedCells, setSelectedCells] = useState<{ row: number, col: number }[]>([]);
-  const [foundWords, setFoundWords] = useState<string[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
 
-  // Simple function to check if a cell is already selected
-  const isCellSelected = (row: number, col: number) => {
-    return selectedCells.some(cell => cell.row === row && cell.col === col);
-  };
+  const [selectedCells, setSelectedCells] = useState<{ row: number; col: number }[]>([]);
+  const [found, setFound] = useState(false);
 
-  const getCellFromCoordinates = (x: number, y: number) => {
-    const cellSize = 44; // cell width/height (40) + margin (4)
-    const padding = 10; // gridContainer padding
+  const isCellSelected = (row: number, col: number) =>
+    selectedCells.some(c => c.row === row && c.col === col);
 
-    const adjustedX = x - padding;
-    const adjustedY = y - padding;
+  const handleCellPress = (row: number, col: number) => {
+    if (found) return;
 
-    if (adjustedX < 0 || adjustedY < 0) return null;
-
-    const col = Math.floor(adjustedX / cellSize);
-    const row = Math.floor(adjustedY / cellSize);
-
-    if (row >= 0 && row < grid.length && col >= 0 && col < grid[0].length) {
-      return { row, col };
-    }
-    return null;
-  };
-
-  // Check if the current selection forms a valid word
-  const checkSelection = () => {
-    if (selectedCells.length < 2) {
-      setSelectedCells([]);
+    // If already selected, deselect it (and everything after) unless it's the last
+    const existingIdx = selectedCells.findIndex(c => c.row === row && c.col === col);
+    if (existingIdx !== -1) {
+      // Tap on last selected cell = clear
+      if (existingIdx === selectedCells.length - 1) {
+        setSelectedCells(selectedCells.slice(0, -1));
+      }
       return;
     }
 
-    const word = selectedCells.map(cell => grid[cell.row][cell.col]).join('');
+    const newCells = [...selectedCells, { row, col }];
 
-    if (word === targetWord) {
-      if (!foundWords.includes(word)) {
-        setFoundWords([...foundWords, word]);
-        setTimeout(() => {
-          Alert.alert('Good job!', `You found "${word}"!`);
-          onComplete();
-        }, 500);
+    // Validate direction: all cells must be in the same direction
+    if (newCells.length >= 2) {
+      const dr = newCells[1].row - newCells[0].row;
+      const dc = newCells[1].col - newCells[0].col;
+      const last = newCells[newCells.length - 2];
+      const curr = newCells[newCells.length - 1];
+      if (curr.row - last.row !== dr || curr.col - last.col !== dc) {
+        toast.error('Keep tapping in the same direction!');
+        return;
       }
     }
 
-    setSelectedCells([]);
-  };
+    setSelectedCells(newCells);
 
-  // Handle touch move to a new cell
-  const handleTouchMove = (row: number, col: number) => {
-    if (!isSelecting) return;
-
-    const lastCell = selectedCells[selectedCells.length - 1];
-    if (lastCell && lastCell.row === row && lastCell.col === col) return;
-
-    if (selectedCells.length > 0) {
-      const rowDiff = Math.abs(lastCell.row - row);
-      const colDiff = Math.abs(lastCell.col - col);
-
-      if (rowDiff > 1 || colDiff > 1) return;
-
-      if (selectedCells.length > 1) {
-        const firstCell = selectedCells[0];
-        const secondCell = selectedCells[1];
-        const dy = secondCell.row - firstCell.row;
-        const dx = secondCell.col - firstCell.col;
-
-        if (row !== lastCell.row + dy || col !== lastCell.col + dx) {
-          const prevCell = selectedCells[selectedCells.length - 2];
-          if (prevCell && row === prevCell.row && col === prevCell.col) {
-            setSelectedCells(selectedCells.slice(0, -1));
-          }
-          return;
-        }
+    // Check if formed the word
+    if (newCells.length === targetWord.length) {
+      const formed = newCells.map(c => grid[c.row][c.col]).join('');
+      if (formed === targetWord || formed === targetWord.split('').reverse().join('')) {
+        setFound(true);
+        toast.success(`You found "${targetWord}"! 🎉`);
+        setTimeout(() => onComplete(), 800);
+      } else {
+        toast.error('Not the word. Try again!');
+        setTimeout(() => setSelectedCells([]), 900);
       }
     }
-
-    if (isCellSelected(row, col)) return;
-
-    setSelectedCells([...selectedCells, { row, col }]);
   };
 
-  // Show hint
-  const showHint = () => {
-    Alert.alert('Hint', `Look for "${targetWord}" in the grid. It can be found horizontally, vertically, or diagonally.`);
+  const getCellStyle = (row: number, col: number) => {
+    if (found && isCellSelected(row, col)) return styles.foundCell;
+    if (isCellSelected(row, col)) return styles.selectedCell;
+    return null;
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Find the hidden word in the grid of letters</Text>
-
       <Text style={styles.subtitle}>
-        Find the hidden word: <Text style={styles.targetWord}>{targetWord}</Text>
+        Find: <Text style={styles.targetWord}>{targetWord}</Text>
       </Text>
-      <Text style={styles.instructions}>Drag to connect letters and form the word</Text>
+      <Text style={styles.instructions}>
+        Tap {targetWord.length} letters in a row (horizontal, vertical or diagonal)
+      </Text>
 
-      <View
-        style={styles.gridContainer}
-        onStartShouldSetResponder={() => true}
-        onResponderGrant={(evt) => {
-          const { locationX, locationY } = evt.nativeEvent;
-          setIsSelecting(true);
-          const cell = getCellFromCoordinates(locationX, locationY);
-          if (cell) {
-            setSelectedCells([{ row: cell.row, col: cell.col }]);
-          } else {
-            setSelectedCells([]);
-          }
-        }}
-        onResponderMove={(evt) => {
-          if (!isSelecting) return;
-          const { locationX, locationY } = evt.nativeEvent;
-          const cell = getCellFromCoordinates(locationX, locationY);
-          if (cell) {
-            handleTouchMove(cell.row, cell.col);
-          }
-        }}
-        onResponderRelease={() => {
-          if (isSelecting) {
-            checkSelection();
-            setIsSelecting(false);
-          }
-        }}
-      >
-        {grid.map((row, rowIndex) => (
-          <View key={`row-${rowIndex}`} style={styles.row}>
-            {row.map((letter, colIndex) => (
-              <View
-                key={`cell-${rowIndex}-${colIndex}`}
-                style={[
-                  styles.cell,
-                  isCellSelected(rowIndex, colIndex) && styles.selectedCell,
-                  foundWords.includes(targetWord) &&
-                  selectedCells.some(cell => cell.row === rowIndex && cell.col === colIndex) &&
-                  styles.foundCell
-                ]}
+      <View style={styles.gridContainer}>
+        {grid.map((rowArr, rowIdx) => (
+          <View key={rowIdx} style={styles.row}>
+            {rowArr.map((letter, colIdx) => (
+              <Pressable
+                key={colIdx}
+                style={[styles.cell, getCellStyle(rowIdx, colIdx)]}
+                onPress={() => handleCellPress(rowIdx, colIdx)}
               >
                 <Text style={styles.cellText}>{letter}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         ))}
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.foundCounter}>
-          Words found: {foundWords.length}
-        </Text>
-        <Pressable style={styles.hintButton} onPress={showHint}>
-          <Text style={styles.hintButtonText}>Hint</Text>
-        </Pressable>
-      </View>
+      <Pressable style={styles.clearBtn} onPress={() => setSelectedCells([])}>
+        <Text style={styles.clearText}>Clear Selection</Text>
+      </Pressable>
 
-      <Text style={styles.note}>
-        The word can be horizontal, vertical, diagonal, or reversed
+      <Text style={styles.progress}>
+        Selected: {selectedCells.length} / {targetWord.length}
       </Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#1a1a1a',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#ccc',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  targetWord: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
-  instructions: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  gridContainer: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 24,
-  },
-  row: {
-    flexDirection: 'row',
-  },
+  container: { padding: 12, alignItems: 'center' },
+  subtitle: { fontSize: 17, color: '#ccc', marginBottom: 6, textAlign: 'center' },
+  targetWord: { color: '#4CAF50', fontWeight: 'bold', fontSize: 20 },
+  instructions: { fontSize: 13, color: '#888', marginBottom: 18, textAlign: 'center', lineHeight: 18 },
+  gridContainer: { backgroundColor: '#2a2a2a', borderRadius: 10, padding: 8 },
+  row: { flexDirection: 'row' },
   cell: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 2,
-    backgroundColor: '#444',
-    borderRadius: 4,
+    width: 44, height: 44, margin: 3, borderRadius: 6,
+    backgroundColor: '#444', justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#555',
   },
-  selectedCell: {
-    backgroundColor: '#2196F3',
+  selectedCell: { backgroundColor: '#1565C0', borderColor: '#2196F3', borderWidth: 2 },
+  foundCell: { backgroundColor: '#2E7D32', borderColor: '#4CAF50', borderWidth: 2 },
+  cellText: { fontSize: 17, fontWeight: 'bold', color: '#fff' },
+  clearBtn: {
+    marginTop: 16, backgroundColor: '#444', paddingHorizontal: 20,
+    paddingVertical: 8, borderRadius: 16,
   },
-  foundCell: {
-    backgroundColor: '#4CAF50',
-  },
-  cellText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 16,
-  },
-  foundCounter: {
-    fontSize: 16,
-    color: '#ccc',
-  },
-  hintButton: {
-    backgroundColor: '#FFC107',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 4,
-  },
-  hintButtonText: {
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  note: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
-  },
+  clearText: { color: '#fff', fontSize: 14 },
+  progress: { marginTop: 10, color: '#888', fontSize: 13 },
 });
