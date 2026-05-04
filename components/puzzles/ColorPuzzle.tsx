@@ -39,7 +39,7 @@ export const ColorPuzzle: React.FC<ColorPuzzleProps> = ({ onComplete, config }) 
     } else {
       setShowingPattern(false);
       setPatternIndex(0);
-      toast.info('Now repeat the pattern!');
+      toast.success('Now repeat the pattern!');
     }
   }, [patternIndex, showingPattern]);
 

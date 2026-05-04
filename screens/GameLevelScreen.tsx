@@ -119,17 +119,17 @@ export default function GameLevelScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backIcon}>
+          <Pressable onPress={() => navigation.navigate('LevelSelect')} style={styles.backIcon}>
             <MaterialCommunityIcons name="arrow-left" size={30} color="#fff" />
           </Pressable>
           <Text style={styles.headerTitle}>Level {levelId}</Text>
           <View style={{ width: 30 }} />
         </View>
         <View style={styles.inProgressContainer}>
-          <MaterialCommunityIcons name="hammer-wrench" size={80} color="#666" />
+          <MaterialCommunityIcons name="tools" size={80} color="#666" />
           <Text style={styles.inProgressTitle}>Coming Soon!</Text>
-          <Text style={styles.inProgressText}>This level is currently in progress.</Text>
-          <Pressable style={styles.returnButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.inProgressText}>This level is currently being built.</Text>
+          <Pressable style={styles.returnButton} onPress={() => navigation.navigate('LevelSelect')}>
             <Text style={styles.returnButtonText}>Return to Level Select</Text>
           </Pressable>
         </View>

@@ -37,7 +37,7 @@ export const PatternPuzzle: React.FC<PatternPuzzleProps> = ({ onComplete, config
         setShowingDemo(false);
         setDemoIndex(-1);
         setHighlightedCell(null);
-        toast.info('Now repeat the pattern!');
+        toast.success('Now repeat the pattern!');
       }, 1200);
       return () => clearTimeout(timer);
     }
