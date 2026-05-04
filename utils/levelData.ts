@@ -8,6 +8,7 @@ import { ColorPuzzle } from '../components/puzzles/ColorPuzzle';
 import { FindObjectsPuzzle } from '../components/puzzles/FindObjectsPuzzle';
 import { NumberSequencePuzzle } from '../components/puzzles/NumberSequencePuzzle';
 import { AnagramPuzzle } from '../components/puzzles/AnagramPuzzle';
+import { SensorPuzzle } from '../components/puzzles/SensorPuzzle';
 
 export interface Level {
   id: number;
@@ -427,6 +428,111 @@ const levels: Record<number, Level> = {
         ['L', 'Z', 'X', 'C', 'V', 'B']
       ]
     }
+  },
+  26: {
+    id: 26,
+    title: "Foggy Mirror",
+    category: 'LOGIC',
+    difficulty: 'medium',
+    question: "Wipe the fog off the mirror to reveal the secret.",
+    hint: "Try rubbing the screen repeatedly.",
+    component: SensorPuzzle,
+    config: { type: 'rub' }
+  },
+  27: {
+    id: 27,
+    title: "Sleeping Owl",
+    category: 'LOGIC',
+    difficulty: 'medium',
+    question: "It's too bright for the owl. Help him sleep!",
+    hint: "What happens when it's dark? Try hiding the screen.",
+    hints: [
+        "Owls sleep when it's dark.",
+        "Try turning your phone face down.",
+        "Keep it dark for a few seconds."
+    ],
+    component: SensorPuzzle,
+    config: { type: 'flip' }
+  },
+  28: {
+    id: 28,
+    title: "Kinetic Energy",
+    category: 'PHYSICS',
+    difficulty: 'medium',
+    question: "The robot is out of power. Charge him up!",
+    hint: "Physical movement creates energy. Move your phone!",
+    component: SensorPuzzle,
+    config: { type: 'shake' }
+  },
+  29: {
+    id: 29,
+    title: "Safe Guard",
+    category: 'LOGIC',
+    difficulty: 'hard',
+    question: "Hold your thumb on the scanner to unlock the vault.",
+    hint: "You need to be patient. Don't let go!",
+    component: SensorPuzzle,
+    config: { type: 'long-press' }
+  },
+  30: {
+    id: 30,
+    title: "Hot Soup",
+    category: 'PHYSICS',
+    difficulty: 'medium',
+    question: "The soup is steaming hot! Cool it down.",
+    hint: "How do you cool down food? Try blowing on it.",
+    component: SensorPuzzle,
+    config: { type: 'mic' }
+  },
+  31: {
+    id: 31,
+    title: "Balance Act",
+    category: 'PHYSICS',
+    difficulty: 'hard',
+    question: "Keep the ball in the center of the beam.",
+    hint: "Tilt your phone left and right to balance.",
+    component: SensorPuzzle,
+    config: { type: 'tilt' }
+  },
+  32: {
+    id: 32,
+    title: "Gravity Flip",
+    category: 'PHYSICS',
+    difficulty: 'medium',
+    question: "The ball is stuck. The only exit is at the TOP.",
+    hint: "If you want things to fall 'up', what should you do with the phone?",
+    component: SensorPuzzle,
+    config: { type: 'upside-down' }
+  },
+  33: {
+    id: 33,
+    title: "Radio Frequency",
+    category: 'LOGIC',
+    difficulty: 'hard',
+    question: "Tune the radio to find the secret station.",
+    hint: "Rotate your phone like a dial to search for the signal.",
+    component: SensorPuzzle,
+    config: { type: 'rotate' }
+  },
+  34: {
+    id: 34,
+    title: "The Water Pump",
+    category: 'LOGIC',
+    difficulty: 'medium',
+    question: "Pump the water to fill the tank!",
+    hint: "Tap the pump as fast as you can!",
+    component: SensorPuzzle,
+    config: { type: 'rapid-tap' }
+  },
+  35: {
+    id: 35,
+    title: "The Secret Lock",
+    category: 'LOGIC',
+    difficulty: 'medium',
+    question: "Unlock the secret combination.",
+    hint: "Tap the pattern lock several times to unlock it.",
+    component: SensorPuzzle,
+    config: { type: 'pattern-swipe' }
   }
 };
 

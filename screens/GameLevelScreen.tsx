@@ -155,6 +155,7 @@ export default function GameLevelScreen() {
         onLevelSelect={handleLevelSelect}
       >
         {React.createElement(levelData.component, {
+          key: `level-${levelId}`,
           onComplete: handleLevelComplete,
           config: levelData.config
         })}
