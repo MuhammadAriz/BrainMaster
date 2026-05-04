@@ -1,4 +1,3 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LightBulbPuzzle } from '../components/puzzles/LightBulbPuzzle';
 import { CountingPuzzle } from '../components/puzzles/CountingPuzzle';
 import { WordPuzzle } from '../components/puzzles/WordPuzzle';
@@ -7,6 +6,8 @@ import { PatternPuzzle } from '../components/puzzles/PatternPuzzle';
 import { LogicPuzzle } from '../components/puzzles/LogicPuzzle';
 import { ColorPuzzle } from '../components/puzzles/ColorPuzzle';
 import { FindObjectsPuzzle } from '../components/puzzles/FindObjectsPuzzle';
+import { NumberSequencePuzzle } from '../components/puzzles/NumberSequencePuzzle';
+import { AnagramPuzzle } from '../components/puzzles/AnagramPuzzle';
 
 export interface Level {
   id: number;
@@ -15,13 +16,12 @@ export interface Level {
   difficulty: 'easy' | 'medium' | 'hard';
   question: string;
   hint: string;
+  hints?: string[];
   component: React.ComponentType<any>;
   config?: any;
 }
 
-// Define levels without any external API calls or heavy computations
 const levels: Record<number, Level> = {
-  // Math & Logic Puzzles (1-5)
   1: {
     id: 1,
     title: "Odd One Out",
@@ -35,17 +35,15 @@ const levels: Record<number, Level> = {
       answer: 4
     }
   },
-
   2: {
     id: 2,
     title: "Light the Bulb",
     category: 'LOGIC',
     difficulty: 'easy',
     question: "Turn on the light bulb. The switch might not work as expected...",
-    hint: "Tapping one bulb toggles it and adjacent bulbs",//"Sometimes you need to warm up the bulb first. Try tapping it multiple times!",
+    hint: "Tapping one bulb toggles it and adjacent bulbs.",
     component: LightBulbPuzzle
   },
-
   3: {
     id: 3,
     title: "Count the Triangles",
@@ -55,7 +53,6 @@ const levels: Record<number, Level> = {
     hint: "Don't forget to count the triangles formed by smaller triangles!",
     component: CountingPuzzle
   },
-
   4: {
     id: 4,
     title: "Word Transform",
@@ -65,14 +62,13 @@ const levels: Record<number, Level> = {
     hint: "You can rotate letters to make new ones. Try rotating 'S'!",
     component: WordPuzzle
   },
-
   5: {
     id: 5,
     title: "Simple Math",
     category: 'MATH',
     difficulty: 'easy',
-    question: "Create an equation that equals 10 using the numbers provided",
-    hint: "Try combining addition and multiplication",
+    question: "Create an equation that equals 10 using the numbers provided.",
+    hint: "Try combining addition and multiplication.",
     component: MathPuzzle,
     config: {
       numbers: [2, 3, 4, 5],
@@ -80,14 +76,12 @@ const levels: Record<number, Level> = {
       multipleOperators: true
     }
   },
-
-  // Pattern Recognition (6-10)
   6: {
     id: 6,
     title: "Color Sequence",
     category: 'LOGIC',
     difficulty: 'easy',
-    question: "Repeat the color pattern shown",
+    question: "Repeat the color pattern shown.",
     hint: "Pay attention to the order of colors!",
     component: ColorPuzzle,
     config: {
@@ -95,28 +89,26 @@ const levels: Record<number, Level> = {
       showInitialPattern: true
     }
   },
-
   7: {
     id: 7,
     title: "Pattern Match",
     category: 'LOGIC',
     difficulty: 'easy',
-    question: "Complete the pattern by selecting dots in the correct order",
-    hint: "The pattern follows a clockwise direction",
+    question: "Complete the pattern by selecting dots in the correct order.",
+    hint: "The pattern follows a clockwise direction.",
     component: PatternPuzzle,
     config: {
-      pattern: [0, 1, 2, 3],
+      pattern: [0, 1, 3, 2],
       clockwise: true
     }
   },
-
   8: {
     id: 8,
     title: "Math Magic",
     category: 'MATH',
     difficulty: 'easy',
-    question: "Make 15 using three numbers",
-    hint: "Try using both addition and multiplication",
+    question: "Make 15 using three numbers.",
+    hint: "Try using both addition and multiplication.",
     component: MathPuzzle,
     config: {
       numbers: [3, 5, 7, 1],
@@ -124,21 +116,19 @@ const levels: Record<number, Level> = {
       multipleOperators: true
     }
   },
-
   9: {
     id: 9,
     title: "Word Puzzle",
     category: 'LOGIC',
     difficulty: 'easy',
-    question: "Make 'STOP' from 'POST'",
-    hint: "Think about how letters can be rearranged",
+    question: "Make 'STOP' from 'POST'.",
+    hint: "Think about how letters can be rearranged.",
     component: WordPuzzle,
     config: {
       word: 'POST',
       target: 'STOP'
     }
   },
-
   10: {
     id: 10,
     title: "Warm Up",
@@ -152,52 +142,76 @@ const levels: Record<number, Level> = {
       warmUpBulbs: [0, 4]
     }
   },
-  // Level 11 - Odd One Out
   11: {
     id: 11,
-    title: "Shape Shifter",
+    title: "Mirror Image",
     category: 'LOGIC',
-    difficulty: 'easy',
-    question: "Which shape has been rotated and mirrored?",
-    hint: "Look at the orientation of each shape closely. One of them looks flipped!",
+    difficulty: 'medium',
+    question: "One of these arrows is a mirror image of the others. Find it!",
+    hint: "Look at the direction and the arrowhead very closely.",
+    hints: [
+      "Compare the first two arrows.",
+      "Most point right. One points left.",
+      "Look for the reversed orientation."
+    ],
     component: LogicPuzzle,
     config: {
-      shapes: ['⬛', '⬛', '🔺', '🔺'],
+      items: [
+        { id: 1, shape: 'icon', icon: 'arrow-right-bold', color: '#4CAF50' },
+        { id: 2, shape: 'icon', icon: 'arrow-right-bold', color: '#4CAF50' },
+        { id: 3, shape: 'icon', icon: 'arrow-left-bold', color: '#4CAF50' },
+        { id: 4, shape: 'icon', icon: 'arrow-right-bold', color: '#4CAF50' },
+        { id: 5, shape: 'icon', icon: 'arrow-right-bold', color: '#4CAF50' },
+        { id: 6, shape: 'icon', icon: 'arrow-right-bold', color: '#4CAF50' }
+      ],
       answer: 3
     }
   },
-  // Level 12 - Light Bulb Puzzle
   12: {
     id: 12,
-    title: "Let There Be Light",
-    category: 'LOGIC',
-    difficulty: 'easy',
-    question: "Turn on all the bulbs. Tapping one toggles its state and adjacent bulbs.",
-    hint: "Try to understand how each tap affects the pattern. Sometimes you need to turn some bulbs off temporarily to get the final solution.",
-    component: LightBulbPuzzle
-  },
-  // Level 13 - Counting Puzzle
-  13: {
-    id: 13,
-    title: "Square Squad",
+    title: "Next Number",
     category: 'MATH',
-    difficulty: 'easy',
-    question: "How many squares can you find in this figure?",
-    hint: "Count both small and larger squares formed by combining smaller ones.",
-    component: CountingPuzzle,
+    difficulty: 'medium',
+    question: "Find the missing number in the sequence.",
+    hint: "Look at the difference between consecutive numbers.",
+    hints: [
+      "2 to 4 is +2.",
+      "4 to 8 is +4.",
+      "It seems to be doubling each time."
+    ],
+    component: NumberSequencePuzzle,
     config: {
-      answer: 14
+      sequence: [2, 4, 8, 16, '?'],
+      answer: 32,
+      options: [24, 30, 32, 40]
     }
   },
-
-  // Level 14 - Word Puzzle
+  13: {
+    id: 13,
+    title: "Unscramble Me",
+    category: 'KNOWLEDGE',
+    difficulty: 'medium',
+    question: "Unscramble the letters to find a word related to thinking.",
+    hint: "It's what sits inside your skull!",
+    hints: [
+      "Starts with B.",
+      "It has 5 letters.",
+      "Rhymes with rain."
+    ],
+    component: AnagramPuzzle,
+    config: {
+      scrambled: 'NIRAB',
+      answer: 'BRAIN',
+      category: 'Anatomy'
+    }
+  },
   14: {
     id: 14,
     title: "Word Chain",
     category: 'LOGIC',
     difficulty: 'easy',
     question: "Start with 'COLD' and end at 'WARM', changing one letter at a time.",
-    hint: "Each step must form a valid English word. Try: COLD → CORD → WORD → WORM → WARM",
+    hint: "Each step must form a valid English word.",
     component: WordPuzzle,
     config: {
       word: 'COLD',
@@ -206,110 +220,216 @@ const levels: Record<number, Level> = {
       chain: ['COLD', 'CORD', 'WORD', 'WORM', 'WARM']
     }
   },
-
-  // Level 15 - Math Puzzle
   15: {
     id: 15,
-    title: "Make it 10",
+    title: "Target Sum",
     category: 'MATH',
-    difficulty: 'easy',
-    question: "Create an equation that equals 10 using the numbers provided",
-    hint: "Try combining addition and multiplication to reach the target number.",
+    difficulty: 'medium',
+    question: "Use all numbers to reach 24.",
+    hint: "Try using multiplication on the larger numbers.",
+    hints: [
+      "6 times 4 is 24.",
+      "How can you get 4 from 1, 3, and 6?",
+      "Wait, use all numbers: (6+6) * (3-1) = 24? No, use [4, 6, 8, 2]."
+    ],
     component: MathPuzzle,
     config: {
-      numbers: [1, 3, 4, 6],
-      target: 10,
+      numbers: [4, 6, 8, 2],
+      target: 24,
       multipleOperators: true
     }
   },
-
-  // Level 16 - Pattern Puzzle
   16: {
     id: 16,
-    title: "Next in Line",
+    title: "Double Pattern",
     category: 'LOGIC',
-    difficulty: 'easy',
-    question: "Find the next shape in the sequence",
-    hint: "Look for alternating patterns, increasing sizes, or rotations in the sequence.",
-    component: PatternPuzzle,
+    difficulty: 'medium',
+    question: "Find the missing number in this alternating sequence.",
+    hint: "There are two separate patterns interleaved.",
+    hints: [
+      "Look at every other number: 1, 2, 3...",
+      "Now look at the other ones: 10, 20, 30...",
+      "What comes after 30?"
+    ],
+    component: NumberSequencePuzzle,
     config: {
-      pattern: [0, 1, 2, 3],
-      clockwise: true
+      sequence: [1, 10, 2, 20, 3, 30, '?'],
+      answer: 4,
+      options: [4, 40, 5, 50],
+      ruleHint: "Two sequences in one!"
     }
   },
-
-  // Level 17 - Color Sequence Puzzle
   17: {
     id: 17,
-    title: "Color Coded",
-    category: 'LOGIC',
-    difficulty: 'easy',
-    question: "Repeat the sequence of blinking colors in the correct order",
-    hint: "Pay attention to the order of colors! The sequence will get longer as you progress.",
-    component: ColorPuzzle,
-    config: {
-      sequence: ['red', 'blue', 'yellow'],
-      showInitialPattern: true
-    }
-  },
-
-  // Level 18 - Toggle Path
-  18: {
-    id: 18,
-    title: "Light the Way",
-    category: 'LOGIC',
-    difficulty: 'medium',
-    question: "Light up all floor tiles by stepping on each tile exactly once",
-    hint: "Plan your path carefully. You can't step on the same tile twice, and you must cover all tiles.",
-    component: PatternPuzzle,
-    config: {
-      gridSize: 3,
-      pathType: 'toggle'
-    }
-  },
-
-  // Level 19 - Hidden Word Finder
-  19: {
-    id: 19,
-    title: "Hidden in Sight",
+    title: "Anagram Master",
     category: 'KNOWLEDGE',
     difficulty: 'medium',
-    question: "Find the hidden word 'BRAIN' in the grid of letters",
-    hint: "The word can be hidden horizontally, vertically, or diagonally. Look carefully!",
+    question: "Unscramble these letters to find a programming term.",
+    hint: "It's what you're doing right now!",
+    component: AnagramPuzzle,
+    config: {
+      scrambled: 'GICODN',
+      answer: 'CODING',
+      category: 'Technology'
+    }
+  },
+  18: {
+    id: 18,
+    title: "Triple Choice",
+    category: 'LOGIC',
+    difficulty: 'medium',
+    question: "Which emoji is the odd one out?",
+    hint: "Look at the category of the emojis.",
+    hints: [
+      "We have fruits and one... thing.",
+      "Apples, Bananas, Cherries...",
+      "A pizza is not a simple fruit!"
+    ],
+    component: LogicPuzzle,
+    config: {
+      items: [
+        { id: 1, shape: 'emoji', emoji: '🍎' },
+        { id: 2, shape: 'emoji', emoji: '🍌' },
+        { id: 3, shape: 'emoji', emoji: '🍕' },
+        { id: 4, shape: 'emoji', emoji: '🍒' },
+        { id: 5, shape: 'emoji', emoji: '🍇' },
+        { id: 6, shape: 'emoji', emoji: '🍓' }
+      ],
+      answer: 3
+    }
+  },
+  19: {
+    id: 19,
+    title: "Hidden Word",
+    category: 'KNOWLEDGE',
+    difficulty: 'medium',
+    question: "Find the hidden word 'BRAIN' in the grid.",
+    hint: "Tap letters in sequence. It might be diagonal!",
     component: FindObjectsPuzzle,
     config: {
       targetWord: 'BRAIN',
       grid: [
-        ['N', 'Q', 'W', 'E', 'R'],
-        ['I', 'I', 'S', 'D', 'F'],
-        ['D', 'Z', 'A', 'C', 'V'],
-        ['D', 'B', 'N', 'R', 'L'],
-        ['E', 'N', 'K', 'J', 'B']
+        ['B', 'X', 'O', 'L', 'P'],
+        ['K', 'R', 'E', 'W', 'Q'],
+        ['M', 'N', 'A', 'Z', 'S'],
+        ['D', 'F', 'G', 'I', 'H'],
+        ['J', 'K', 'L', 'O', 'N']
       ]
     }
   },
-
-  // Level 20 - Emoji Equations
   20: {
     id: 20,
-    title: "Emoji Equations",
+    title: "Emoji Math",
     category: 'MATH',
     difficulty: 'medium',
-    question: "Solve the value of each emoji in the equations",
-    hint: "Use the given equations to deduce the value of each emoji. Think of it like algebra!",
+    question: "Solve for the values of the emojis.",
+    hint: "Solve the first equation to find the value of the Apple.",
     component: MathPuzzle,
     config: {
       type: 'emoji',
       equations: [
-        { emoji: ['🍎', '🍎', '🍒'], result: 12 },
-        { emoji: ['🍎', '🍒'], result: 8 }
+        { emoji: ['🍎', '🍎'], result: 10 },
+        { emoji: ['🍎', '🍌'], result: 12 }
       ],
-      solution: { '🍎': 4, '🍒': 4 }
+      solution: { '🍎': 5, '🍌': 7 }
+    }
+  },
+  21: {
+    id: 21,
+    title: "Prime Sequence",
+    category: 'MATH',
+    difficulty: 'hard',
+    question: "What is the next number in this sequence?",
+    hint: "These numbers are only divisible by 1 and themselves.",
+    hints: [
+      "Think about Prime numbers.",
+      "2, 3, 5, 7, 11...",
+      "What is the next prime after 11?"
+    ],
+    component: NumberSequencePuzzle,
+    config: {
+      sequence: [2, 3, 5, 7, 11, '?'],
+      answer: 13,
+      options: [12, 13, 14, 15]
+    }
+  },
+  22: {
+    id: 22,
+    title: "Fruit Salad",
+    category: 'KNOWLEDGE',
+    difficulty: 'medium',
+    question: "Unscramble the name of this tropical fruit.",
+    hint: "It has a rough skin and a crown.",
+    component: AnagramPuzzle,
+    config: {
+      scrambled: 'EPPALNEPI',
+      answer: 'PINEAPPLE',
+      category: 'Food'
+    }
+  },
+  23: {
+    id: 23,
+    title: "Logic Grid",
+    category: 'LOGIC',
+    difficulty: 'hard',
+    question: "One of these is not like the others.",
+    hint: "Look at the number of sides or the symmetry.",
+    hints: [
+      "Count the sides of each shape.",
+      "Square(4), Triangle(3), Pentagon(5)...",
+      "Look at the color patterns if sides are equal."
+    ],
+    component: LogicPuzzle,
+    config: {
+      items: [
+        { id: 1, shape: 'square', color: '#2196F3' },
+        { id: 2, shape: 'square', color: '#2196F3' },
+        { id: 3, shape: 'circle', color: '#2196F3' },
+        { id: 4, shape: 'square', color: '#2196F3' }
+      ],
+      answer: 3
+    }
+  },
+  24: {
+    id: 24,
+    title: "Fibonacci Fun",
+    category: 'MATH',
+    difficulty: 'hard',
+    question: "Complete the sequence: 1, 1, 2, 3, 5, 8, ?",
+    hint: "Each number is the sum of the two preceding ones.",
+    hints: [
+      "1 + 1 = 2",
+      "2 + 3 = 5",
+      "What is 5 + 8?"
+    ],
+    component: NumberSequencePuzzle,
+    config: {
+      sequence: [1, 1, 2, 3, 5, 8, '?'],
+      answer: 13,
+      options: [10, 11, 12, 13]
+    }
+  },
+  25: {
+    id: 25,
+    title: "Word Hunt",
+    category: 'KNOWLEDGE',
+    difficulty: 'hard',
+    question: "Find the hidden word 'MASTER' in the grid.",
+    hint: "It might be vertical!",
+    component: FindObjectsPuzzle,
+    config: {
+      targetWord: 'MASTER',
+      grid: [
+        ['M', 'A', 'S', 'T', 'E', 'R'],
+        ['Q', 'W', 'E', 'R', 'T', 'Y'],
+        ['U', 'I', 'O', 'P', 'A', 'S'],
+        ['D', 'F', 'G', 'H', 'J', 'K'],
+        ['L', 'Z', 'X', 'C', 'V', 'B']
+      ]
     }
   }
 };
 
-// Helper function to get level data
 export const getLevelData = (levelId: number): Level | null => {
   return levels[levelId] || null;
 };

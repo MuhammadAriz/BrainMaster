@@ -144,6 +144,7 @@ export default function GameLevelScreen() {
         level={levelId}
         question={levelData.question}
         hint={levelData.hint}
+        hints={levelData.hints}
         isComplete={isComplete}
         onComplete={handleLevelComplete}
         onSkip={handleSkip}
