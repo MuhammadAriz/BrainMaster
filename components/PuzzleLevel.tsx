@@ -297,6 +297,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 24,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    paddingHorizontal: 20,
   },
   puzzleContainer: {
     flex: 1,
