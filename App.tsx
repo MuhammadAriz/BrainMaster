@@ -3,13 +3,14 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 import HomeScreen from './screens/HomeScreen';
 import LevelSelectScreen from './screens/LevelSelectScreen';
 import GameLevelScreen from './screens/GameLevelScreen';
+import { initializeAds } from './utils/adInit';
 
 // Keep the splash screen visible while we fetch resources
 // This MUST be called before any component renders
@@ -31,7 +32,7 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Pre-load fonts or make API calls here if needed
+        await initializeAds();
       } catch (e) {
         console.warn(e);
       } finally {
