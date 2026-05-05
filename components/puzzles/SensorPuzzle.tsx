@@ -241,6 +241,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
     if (completedRef.current) return;
     completedRef.current = true;
     setIsActive(false);
+    stopSensor(); // Immediate cleanup
     setStatus('success');
     toast.success('Brilliant! Level Clear! 🎉');
     setTimeout(() => {

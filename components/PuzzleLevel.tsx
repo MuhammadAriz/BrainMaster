@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { toast } from 'sonner-native';
-import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { adManager } from '../utils/adManager';
 
 interface PuzzleLevelProps {
   level: number;
@@ -59,6 +60,8 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
   const [showSkipScreen, setShowSkipScreen] = useState(false);
   const [motivationalMessage, setMotivationalMessage] = useState('');
+  const [isAdLoading, setIsAdLoading] = useState(false);
+  const [adsWatchedThisLevel, setAdsWatchedThisLevel] = useState(0);
 
   useEffect(() => {
     AsyncStorage.getItem('bulbs').then(stored => {
@@ -72,6 +75,7 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
     setShowSkipScreen(false);
     setHintUsed(false);
     setShowHint(false);
+    setAdsWatchedThisLevel(0); // Reset ad count for new level
   }, [level]);
 
   useEffect(() => {
@@ -107,10 +111,32 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
     }
   };
 
-  const handleWatchAd = () => {
-    saveBulbs(bulbs + 2);
-    toast.success('+2 bulbs added!');
-    onWatchAd();
+  const handleWatchAd = async () => {
+    if (isAdLoading) return;
+    
+    setIsAdLoading(true);
+    await adManager.showRewardedAd(async () => {
+        const nextBulbs = bulbs + 2;
+        await saveBulbs(nextBulbs);
+        onWatchAd();
+    });
+    setIsAdLoading(false);
+  };
+
+  const handleGetBulb = async () => {
+    if (isAdLoading) return;
+    if (adsWatchedThisLevel >= 3) {
+        toast.info("Daily limit reached for this level! Try the next one.");
+        return;
+    }
+
+    setIsAdLoading(true);
+    await adManager.showRewardedAd(async () => {
+        const nextBulbs = bulbs + 1;
+        await saveBulbs(nextBulbs);
+        setAdsWatchedThisLevel(prev => prev + 1);
+    });
+    setIsAdLoading(false);
   };
 
   const handleNextLevel = () => {
@@ -140,11 +166,30 @@ export const PuzzleLevel: React.FC<PuzzleLevelProps> = ({
             <MaterialCommunityIcons name="lightbulb" size={14} color="#FFD700" />
             <Text style={styles.bulbCount}>{bulbs}</Text>
           </View>
-          <Pressable onPress={handleHintPress} style={styles.iconButton} accessibilityLabel="Hint">
+          <Pressable 
+            onPress={handleHintPress} 
+            style={[styles.iconButton, bulbs === 0 && { opacity: 0.3 }]} 
+            accessibilityLabel="Hint"
+          >
             <MaterialCommunityIcons name="lightbulb-outline" size={22} color="#FFD700" />
           </Pressable>
           <Pressable onPress={handleSkip} style={styles.iconButton} accessibilityLabel="Skip">
             <MaterialCommunityIcons name="skip-next" size={22} color="#fff" />
+          </Pressable>
+          <Pressable 
+            onPress={handleGetBulb} 
+            disabled={isAdLoading}
+            style={[styles.iconButton, styles.adTrigger, isAdLoading && { opacity: 0.5 }]} 
+            accessibilityLabel="Watch ad for bulb"
+          >
+            {isAdLoading ? (
+                <ActivityIndicator size="small" color="#FFD700" />
+            ) : (
+                <>
+                    <MaterialCommunityIcons name="video-plus" size={20} color="#FFD700" />
+                    <Text style={styles.adTag}>+1💡</Text>
+                </>
+            )}
           </Pressable>
           <Pressable onPress={onExit} style={styles.iconButton} accessibilityLabel="Exit">
             <MaterialCommunityIcons name="exit-to-app" size={22} color="#fff" />
@@ -290,6 +335,20 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     fontWeight: 'bold',
     fontSize: 13,
+  },
+  adTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(33, 150, 243, 0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginRight: 4,
+    gap: 4,
+  },
+  adTag: {
+    color: '#FFD700',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   question: {
     fontSize: 17,
