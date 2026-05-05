@@ -23,12 +23,12 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
   const [progress, setProgress] = useState(0);
   const [isActive, setIsActive] = useState(true);
   const [status, setStatus] = useState<'idle' | 'active' | 'success'>('idle');
-  
+
   // Shared values for animations
   const animatedValue = useSharedValue(0);
   const secondaryValue = useSharedValue(0);
   const shakeValue = useSharedValue(0);
-  
+
   // Reanimated styles (Must be at top level)
   const shakeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shakeValue.value }]
@@ -47,6 +47,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
   }));
 
   // Refs for sensors
+  const subscription = useRef<any>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const completedRef = useRef(false);
 
@@ -94,7 +95,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
           // Normalize x to -1 to 1 for tilt
           const tiltX = data.x; // -1 to 1
           animatedValue.value = withSpring(tiltX * 100);
-          
+
           // Win condition: stay in center (between -0.1 and 0.1)
           if (Math.abs(tiltX) < 0.1) {
             setProgress(prev => {
@@ -128,7 +129,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
         try {
           const permission = await Audio.getPermissionsAsync();
           let status = permission.status;
-          
+
           if (status !== 'granted') {
             const request = await Audio.requestPermissionsAsync();
             status = request.status;
@@ -142,7 +143,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
             allowsRecordingIOS: true,
             playsInSilentModeIOS: true,
           });
-          
+
           const recording = new Audio.Recording();
           await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.LOW_QUALITY);
           await recording.getStatusAsync();
@@ -153,25 +154,27 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
             if (!recordingRef.current) return;
             const status = await recordingRef.current.getStatusAsync();
             if (status.canRecord && status.isRecording) {
-                // status.metering is usually -160 to 0
-                // Simple threshold for "blowing"
-                const level = status.metering || -160;
-                if (level > -20) {
-                    setProgress(prev => {
-                        const next = Math.min(prev + 0.1, 1);
-                        if (next >= 1 && isActive) {
-                            clearInterval(interval);
-                            completeLevel();
-                        }
-                        return next;
-                    });
-                }
+              // status.metering is usually -160 to 0
+              // Simple threshold for "blowing"
+              const level = status.metering || -160;
+              if (level > -20) {
+                setProgress(prev => {
+                  const next = Math.min(prev + 0.1, 1);
+                  if (next >= 1 && isActive) {
+                    clearInterval(interval);
+                    completeLevel();
+                  }
+                  return next;
+                });
+              }
             }
           }, 100);
-          subscription.current = { remove: () => {
+          subscription.current = {
+            remove: () => {
               clearInterval(interval);
               recordingRef.current?.stopAndUnloadAsync();
-          }};
+            }
+          };
         } catch (err) {
           console.error(err);
         }
@@ -180,25 +183,25 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
       case 'rotate':
         Gyroscope.setUpdateInterval(100);
         subscription.current = Gyroscope.addListener(data => {
-            // Integrate rotation
-            animatedValue.value += data.z * 0.1;
-            const normalized = Math.abs(animatedValue.value % (Math.PI * 2));
-            // Target: rotate 360 degrees (approx 6.28 rad)
-            if (normalized > 6) {
-                completeLevel();
-            }
+          // Integrate rotation
+          animatedValue.value += data.z * 0.1;
+          const normalized = Math.abs(animatedValue.value % (Math.PI * 2));
+          // Target: rotate 360 degrees (approx 6.28 rad)
+          if (normalized > 6) {
+            completeLevel();
+          }
         });
         break;
 
       case 'upside-down':
         Accelerometer.setUpdateInterval(200);
         subscription.current = Accelerometer.addListener(data => {
-            // y ~ -1 is normal upright for some devices, check orientation
-            // We want the phone to be turned "downward" (upside down)
-            // Typically y ~ 1 when upside down
-            if (data.y > 0.8) {
-                completeLevel();
-            }
+          // y ~ -1 is normal upright for some devices, check orientation
+          // We want the phone to be turned "downward" (upside down)
+          // Typically y ~ 1 when upside down
+          if (data.y > 0.8) {
+            completeLevel();
+          }
         });
         break;
 
@@ -209,7 +212,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
       case 'long-press':
         // Handled by touch events
         break;
-        
+
       case 'rapid-tap':
         // Handled by Pressable in render
         break;
@@ -227,10 +230,10 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
       subscription.current = null;
     }
     if (recordingRef.current) {
-        try {
-            await recordingRef.current.stopAndUnloadAsync();
-        } catch (e) {}
-        recordingRef.current = null;
+      try {
+        await recordingRef.current.stopAndUnloadAsync();
+      } catch (e) { }
+      recordingRef.current = null;
     }
   };
 
@@ -241,7 +244,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
     setStatus('success');
     toast.success('Brilliant! Level Clear! 🎉');
     setTimeout(() => {
-        if (onComplete) onComplete();
+      if (onComplete) onComplete();
     }, 800);
   };
 
@@ -250,27 +253,27 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
       case 'shake':
         return (
           <View style={styles.center}>
-             <Animated.View style={shakeStyle}>
-                <MaterialCommunityIcons name="robot" size={120} color={progress > 0.8 ? "#4CAF50" : "#757575"} />
-                <View style={styles.batteryContainer}>
-                   <View style={[styles.batteryFill, { width: `${progress * 100}%`, backgroundColor: progress > 0.8 ? '#4CAF50' : '#FF5252' }]} />
-                </View>
-                <Text style={styles.statusText}>{Math.round(progress * 100)}% Charged</Text>
-             </Animated.View>
-             <Text style={styles.instruction}>SHAKE TO CHARGE</Text>
+            <Animated.View style={shakeStyle}>
+              <MaterialCommunityIcons name="robot" size={120} color={progress > 0.8 ? "#4CAF50" : "#757575"} />
+              <View style={styles.batteryContainer}>
+                <View style={[styles.batteryFill, { width: `${progress * 100}%`, backgroundColor: progress > 0.8 ? '#4CAF50' : '#FF5252' }]} />
+              </View>
+              <Text style={styles.statusText}>{Math.round(progress * 100)}% Charged</Text>
+            </Animated.View>
+            <Text style={styles.instruction}>SHAKE TO CHARGE</Text>
           </View>
         );
 
       case 'tilt':
         return (
           <View style={styles.center}>
-             <View style={styles.balanceBeam}>
-                <Animated.View style={[styles.ball, ballStyle]} />
-               <View style={styles.centerMark} />
+            <View style={styles.balanceBeam}>
+              <Animated.View style={[styles.ball, ballStyle]} />
+              <View style={styles.centerMark} />
             </View>
             <Text style={styles.instruction}>KEEP IT CENTERED</Text>
             <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+              <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
             </View>
           </View>
         );
@@ -279,58 +282,58 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
         const isDark = progress > 0.5 || status === 'success';
         return (
           <View style={[styles.center, { flex: 1, width: '100%', backgroundColor: isDark ? '#1A237E' : '#FFF9C4', borderRadius: 20 }]}>
-             <View style={styles.owlContainer}>
-                <Text style={{ fontSize: 80 }}>{isDark ? '😴' : '🦉'}</Text>
-                <MaterialCommunityIcons 
-                    name={isDark ? "weather-night" : "weather-sunny"} 
-                    size={60} 
-                    color={isDark ? "#E8EAF6" : "#FBC02D"} 
-                    style={styles.weatherIcon}
-                />
-             </View>
-             <Text style={[styles.instruction, { color: isDark ? '#fff' : '#333' }]}>
-                {isDark ? "Goodnight..." : "IT'S TOO BRIGHT!"}
-             </Text>
+            <View style={styles.owlContainer}>
+              <Text style={{ fontSize: 80 }}>{isDark ? '😴' : '🦉'}</Text>
+              <MaterialCommunityIcons
+                name={isDark ? "weather-night" : "weather-sunny"}
+                size={60}
+                color={isDark ? "#E8EAF6" : "#FBC02D"}
+                style={styles.weatherIcon}
+              />
+            </View>
+            <Text style={[styles.instruction, { color: isDark ? '#fff' : '#333' }]}>
+              {isDark ? "Goodnight..." : "IT'S TOO BRIGHT!"}
+            </Text>
           </View>
         );
 
       case 'mic':
         return (
           <View style={styles.center}>
-             <MaterialCommunityIcons name="bowl-mix" size={100} color="#8D6E63" />
-             {progress < 1 && (
-                 <View style={[styles.steam, { opacity: 1 - progress }]}>
-                    <MaterialCommunityIcons name="weather-windy" size={40} color="#ccc" />
-                 </View>
-             )}
-             <Text style={styles.instruction}>COOL DOWN THE SOUP</Text>
-             <Pressable 
-                onPress={startSensor}
-                style={[styles.actionButton, { marginTop: 20, backgroundColor: '#795548' }]}
-             >
-                <Text style={styles.buttonText}>Enable Microphone</Text>
-             </Pressable>
+            <MaterialCommunityIcons name="bowl-mix" size={100} color="#8D6E63" />
+            {progress < 1 && (
+              <View style={[styles.steam, { opacity: 1 - progress }]}>
+                <MaterialCommunityIcons name="weather-windy" size={40} color="#ccc" />
+              </View>
+            )}
+            <Text style={styles.instruction}>COOL DOWN THE SOUP</Text>
+            <Pressable
+              onPress={startSensor}
+              style={[styles.actionButton, { marginTop: 20, backgroundColor: '#795548' }]}
+            >
+              <Text style={styles.buttonText}>Enable Microphone</Text>
+            </Pressable>
           </View>
         );
 
       case 'rotate':
         return (
           <View style={styles.center}>
-             <Animated.View style={rotateStyle}>
-                <MaterialCommunityIcons name="radio" size={100} color="#607D8B" />
-             </Animated.View>
-             <Text style={styles.instruction}>FIND THE SIGNAL</Text>
+            <Animated.View style={rotateStyle}>
+              <MaterialCommunityIcons name="radio" size={100} color="#607D8B" />
+            </Animated.View>
+            <Text style={styles.instruction}>FIND THE SIGNAL</Text>
           </View>
         );
 
       case 'upside-down':
         return (
           <View style={styles.center}>
-             <View style={styles.box}>
-                <MaterialCommunityIcons name="circle" size={40} color="#FF5252" />
-             </View>
-             <Text style={styles.instruction}>GET THE BALL OUT</Text>
-             <MaterialCommunityIcons name="arrow-up" size={40} color="#4CAF50" style={{ marginTop: 20 }} />
+            <View style={styles.box}>
+              <MaterialCommunityIcons name="circle" size={40} color="#FF5252" />
+            </View>
+            <Text style={styles.instruction}>GET THE BALL OUT</Text>
+            <MaterialCommunityIcons name="arrow-up" size={40} color="#4CAF50" style={{ marginTop: 20 }} />
           </View>
         );
 
@@ -338,81 +341,128 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
         return (
           <View style={styles.container}>
             <View style={styles.mirrorContainer}>
-                {/* Revealable content */}
-                <View style={styles.hiddenKey}>
-                    <MaterialCommunityIcons name="key" size={80} color="#FFD700" />
-                </View>
-                {/* Fog Layer */}
-                <View 
-                    style={[styles.fogOverlay, { opacity: 1 - progress }]}
-                    onStartShouldSetResponder={() => true}
-                    onResponderMove={() => {
-                        setProgress(p => Math.min(p + 0.02, 1));
-                        if (progress >= 0.98 && isActive) completeLevel();
-                    }}
-                />
+              {/* Revealable content */}
+              <View style={styles.hiddenKey}>
+                <MaterialCommunityIcons name="key" size={80} color="#FFD700" />
+              </View>
+              {/* Fog Layer */}
+              <View
+                style={[styles.fogOverlay, { opacity: 1 - progress }]}
+                onStartShouldSetResponder={() => true}
+                onResponderMove={() => {
+                  setProgress(p => Math.min(p + 0.02, 1));
+                  if (progress >= 0.98 && isActive) completeLevel();
+                }}
+              />
             </View>
             <Text style={styles.instruction}>WIPE THE MIRROR</Text>
           </View>
         );
 
-        case 'long-press':
-            return (
-                <View style={styles.center}>
-                    <Pressable 
-                        onLongPress={() => completeLevel()}
-                        delayLongPress={3000}
-                        onPressIn={() => animatedValue.value = withTiming(1, { duration: 3000 })}
-                        onPressOut={() => animatedValue.value = withTiming(0)}
-                        style={styles.pressArea}
-                    >
-                        <Animated.View style={[styles.fillCircle, fillCircleStyle]} />
-                        <MaterialCommunityIcons name="fingerprint" size={80} color="#fff" />
-                    </Pressable>
-                    <Text style={styles.instruction}>HOLD TO AUTHENTICATE</Text>
-                </View>
-            )
+      case 'long-press':
+        return (
+          <View style={styles.center}>
+            <Pressable
+              onLongPress={() => completeLevel()}
+              delayLongPress={3000}
+              onPressIn={() => animatedValue.value = withTiming(1, { duration: 3000 })}
+              onPressOut={() => animatedValue.value = withTiming(0)}
+              style={styles.pressArea}
+            >
+              <Animated.View style={[styles.fillCircle, fillCircleStyle]} />
+              <MaterialCommunityIcons name="fingerprint" size={80} color="#fff" />
+            </Pressable>
+            <Text style={styles.instruction}>HOLD TO AUTHENTICATE</Text>
+          </View>
+        )
 
-        case 'rapid-tap':
-            return (
-                <View style={styles.center}>
-                    <Pressable 
-                        onPress={() => {
-                            const next = Math.min(progress + 0.05, 1);
-                            setProgress(next);
-                            if (next >= 1 && isActive) completeLevel();
-                        }}
-                        style={[styles.pressArea, { backgroundColor: '#FF5722' }]}
-                    >
-                        <MaterialCommunityIcons name="faucet" size={80} color="#fff" />
-                    </Pressable>
-                    <Text style={styles.instruction}>TAP RAPIDLY TO PUMP</Text>
-                    <View style={[styles.progressBar, { marginTop: 20 }]}>
-                        <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: '#FF5722' }]} />
+      case 'rapid-tap':
+        return (
+          <View style={styles.center}>
+            <View style={styles.pumpScene}>
+              {/* Hand Pump */}
+              <View style={styles.pumpContainer}>
+                <Pressable
+                  onPress={() => {
+                    const next = Math.min(progress + 0.05, 1);
+                    setProgress(next);
+                    if (next >= 1 && isActive) completeLevel();
+                  }}
+                >
+                  {({ pressed }) => (
+                    <View style={[
+                      styles.pumpHandle,
+                      { transform: [{ translateY: pressed ? 10 : 0 }] }
+                    ]}>
+                      <MaterialCommunityIcons name="water-pump" size={80} color="#795548" />
+                      {/* Pumping Water Visual - Only show when pressing */}
+                      {pressed && (
+                        <View style={styles.waterStreamContainer}>
+                          <View style={styles.waterStream} />
+                        </View>
+                      )}
                     </View>
-                </View>
-            )
+                  )}
+                </Pressable>
+                <View style={styles.pumpBase} />
+              </View>
 
-        case 'pattern-swipe':
-            return (
-                <View style={styles.center}>
-                    <View 
-                        style={styles.swipeArea}
-                        onStartShouldSetResponder={() => true}
-                        onResponderRelease={(evt) => {
-                            const { locationX, locationY } = evt.nativeEvent;
-                            // Simple swipe detection or just multi-direction tap
-                            // Let's make it a "Secret Sequence" tap level for simplicity
-                            const next = Math.min(progress + 0.25, 1);
-                            setProgress(next);
-                            if (next >= 1 && isActive) completeLevel();
-                        }}
-                    >
-                        <MaterialCommunityIcons name="pattern-lock" size={80} color="#fff" />
-                    </View>
-                    <Text style={styles.instruction}>UNLOCK THE PATTERN</Text>
+              {/* Connection Pipe */}
+              <View style={styles.pipe} />
+
+              {/* Water Tank */}
+              <View style={styles.tankContainer}>
+                <View style={styles.tankOuter}>
+                  <Animated.View
+                    style={[
+                      styles.tankWater,
+                      { height: `${progress * 100}%` }
+                    ]}
+                  />
                 </View>
-            )
+
+                {/* External Leak at bottom right */}
+                {progress > 0 && (
+                  <View style={styles.externalLeak}>
+                    <View style={styles.leakDrops}>
+                      <MaterialCommunityIcons name="water" size={12} color="#2196F3" style={styles.drop1} />
+                      <MaterialCommunityIcons name="water" size={12} color="#2196F3" style={styles.drop2} />
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.tankLegs} />
+              </View>
+            </View>
+
+            <Text style={styles.instruction}>FILL THE TANK</Text>
+
+            <View style={[styles.progressBar, { marginTop: 40 }]}>
+              <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: '#2196F3' }]} />
+            </View>
+          </View>
+        )
+
+      case 'pattern-swipe':
+        return (
+          <View style={styles.center}>
+            <View
+              style={styles.swipeArea}
+              onStartShouldSetResponder={() => true}
+              onResponderRelease={(evt) => {
+                const { locationX, locationY } = evt.nativeEvent;
+                // Simple swipe detection or just multi-direction tap
+                // Let's make it a "Secret Sequence" tap level for simplicity
+                const next = Math.min(progress + 0.25, 1);
+                setProgress(next);
+                if (next >= 1 && isActive) completeLevel();
+              }}
+            >
+              <MaterialCommunityIcons name="pattern-lock" size={80} color="#fff" />
+            </View>
+            <Text style={styles.instruction}>UNLOCK THE PATTERN</Text>
+          </View>
+        )
 
       default:
         return <Text style={styles.statusText}>Sensor level {config.type} coming soon...</Text>;
@@ -496,16 +546,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   progressBar: {
-      width: 200,
-      height: 6,
-      backgroundColor: '#333',
-      borderRadius: 3,
-      marginTop: 40,
-      overflow: 'hidden',
+    width: 200,
+    height: 6,
+    backgroundColor: '#333',
+    borderRadius: 3,
+    marginTop: 40,
+    overflow: 'hidden',
   },
   progressFill: {
-      height: '100%',
-      backgroundColor: '#4CAF50',
+    height: '100%',
+    backgroundColor: '#4CAF50',
   },
   // Rub Styles
   mirrorContainer: {
@@ -528,25 +578,25 @@ const styles = StyleSheet.create({
   },
   // Mic Styles
   steam: {
-      position: 'absolute',
-      top: -50,
+    position: 'absolute',
+    top: -50,
   },
   // Long Press
   pressArea: {
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      backgroundColor: '#333',
-      justifyContent: 'center',
-      alignItems: 'center',
-      overflow: 'hidden',
-      borderWidth: 4,
-      borderColor: '#444',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 4,
+    borderColor: '#444',
   },
   fillCircle: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: '#2196F3',
-      borderRadius: 75,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#2196F3',
+    borderRadius: 75,
   },
   box: {
     width: 200,
@@ -578,6 +628,91 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Pump Scene Styles
+  pumpScene: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    height: 200,
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  pumpContainer: {
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  pumpHandle: {
+    padding: 10,
+  },
+  pumpBase: {
+    width: 20,
+    height: 60,
+    backgroundColor: '#5D4037',
+    borderRadius: 2,
+  },
+  pipe: {
+    width: 60,
+    height: 8,
+    backgroundColor: '#757575',
+    marginBottom: 20,
+  },
+  tankContainer: {
+    alignItems: 'center',
+  },
+  tankOuter: {
+    width: 100,
+    height: 120,
+    borderWidth: 4,
+    borderColor: '#9E9E9E',
+    borderTopWidth: 0,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  tankWater: {
+    width: '100%',
+    backgroundColor: '#2196F3',
+    opacity: 0.8,
+  },
+  tankLegs: {
+    width: 80,
+    height: 10,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderColor: '#9E9E9E',
+  },
+  externalLeak: {
+    position: 'absolute',
+    bottom: -10,
+    right: -5,
+    alignItems: 'center',
+  },
+  leakDrops: {
+    alignItems: 'center',
+    marginTop: -2,
+  },
+  drop1: {
+    opacity: 0.6,
+  },
+  drop2: {
+    marginTop: -4,
+    opacity: 0.3,
+  },
+  waterStreamContainer: {
+    position: 'absolute',
+    bottom: -10,
+    right: 5,
+    height: 30,
+    width: 10,
+    alignItems: 'center',
+  },
+  waterStream: {
+    width: 6,
+    height: '100%',
+    backgroundColor: '#2196F3',
+    borderRadius: 3,
   },
   owlContainer: {
     alignItems: 'center',
