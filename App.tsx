@@ -1,19 +1,28 @@
 import 'react-native-gesture-handler';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, View, Image, Dimensions } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  Easing,
+  runOnJS
+} from 'react-native-reanimated';
+
 import HomeScreen from './screens/HomeScreen';
 import LevelSelectScreen from './screens/LevelSelectScreen';
 import GameLevelScreen from './screens/GameLevelScreen';
 import { initializeAds } from './utils/adInit';
 
+const { width, height } = Dimensions.get('window');
+
 // Keep the splash screen visible while we fetch resources
-// This MUST be called before any component renders
 SplashScreen.preventAutoHideAsync();
 
 const Stack = createNativeStackNavigator();
@@ -29,18 +38,55 @@ function RootStack() {
 }
 
 export default function App() {
+  const [appIsReady, setAppIsReady] = useState(false);
+  const [splashAnimationFinished, setSplashAnimationFinished] = useState(false);
+  
+  const opacity = useSharedValue(1);
+  const scale = useSharedValue(1);
+
   useEffect(() => {
     async function prepare() {
       try {
+        // Initialize Ads and any other resources
         await initializeAds();
+        // Artificial delay for smooth feel (optional)
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (e) {
         console.warn(e);
       } finally {
-        await SplashScreen.hideAsync();
+        setAppIsReady(true);
       }
     }
     prepare();
   }, []);
+
+  useEffect(() => {
+    if (appIsReady) {
+      // Hide native splash and start JS animation
+      SplashScreen.hideAsync();
+      
+      opacity.value = withTiming(0, {
+        duration: 800,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+      }, (finished) => {
+        if (finished) {
+          runOnJS(setSplashAnimationFinished)(true);
+        }
+      });
+      
+      scale.value = withTiming(0.9, {
+        duration: 800,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+      });
+    }
+  }, [appIsReady]);
+
+  const animatedSplashStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+      transform: [{ scale: scale.value }],
+    };
+  });
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -48,6 +94,21 @@ export default function App() {
         <NavigationContainer>
           <RootStack />
         </NavigationContainer>
+        
+        {/* Premium Animated Splash Overlay */}
+        {!splashAnimationFinished && (
+          <Animated.View 
+            pointerEvents="none" 
+            style={[StyleSheet.absoluteFill, styles.splashOverlay, animatedSplashStyle]}
+          >
+            <Image 
+              source={require('./assets/splash.png')}
+              style={styles.splashImage}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        )}
+
         <Toaster
           position="bottom-center"
           duration={2000}
@@ -76,4 +137,14 @@ const styles = StyleSheet.create({
     flex: 1,
     userSelect: 'none',
   },
+  splashOverlay: {
+    backgroundColor: '#1a1a1a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  splashImage: {
+    width: width * 0.7,
+    height: width * 0.7,
+  }
 });

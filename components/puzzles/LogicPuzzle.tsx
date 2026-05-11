@@ -65,7 +65,6 @@ export const LogicPuzzle: React.FC<LogicPuzzleProps> = ({ onComplete, config }) 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.instruction}>Find the odd one out:</Text>
       <View style={styles.grid}>
         {items.map((item) => (
           <Pressable

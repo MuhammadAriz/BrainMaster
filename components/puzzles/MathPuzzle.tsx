@@ -94,7 +94,8 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
         setEquation(newEquation);
         setSelectedNumbers([...selectedNumbers, num]);
       } else {
-        toast.error('An operator must be placed between numbers.');
+        // Just return, the UI already indicates number is not selectable
+        return;
       }
     }
   };
@@ -102,7 +103,6 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
   const handleOperatorPress = (op: string) => {
     if (isCorrect) return;
     if (equation.length === 0) {
-      toast.error('Please select a number first.');
       return;
     }
   
@@ -217,7 +217,7 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
                 onComplete();
             }, 1000);
         } else {
-            toast.error('Check your answers again!');
+            // Incorrect answer feedback is already visual via input clearing/reset
         }
     };
     
@@ -265,12 +265,6 @@ export const MathPuzzle: React.FC<MathPuzzleProps> = ({ onComplete, config }) =>
 
   return (
     <View style={styles.container}>
-      <Text style={styles.instruction}>
-        {puzzleType === 'equation' 
-          ? `Create an equation that equals ${target} using all numbers provided`
-          : 'Solve the emoji equations'}
-      </Text>
-      
       {puzzleType === 'equation' ? renderEquationPuzzle() : renderEmojiPuzzle()}
     </View>
   );

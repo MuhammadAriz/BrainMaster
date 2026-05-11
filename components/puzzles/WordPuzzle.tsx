@@ -66,9 +66,21 @@ export const WordPuzzle: React.FC<WordPuzzleProps> = ({ onComplete, config }) =>
       newWord[firstIndex] = newWord[index];
       newWord[index] = temp;
       
+      const newSteps = steps + 1;
+      // Strict mode: if steps > 2 for RATS -> STAR, reset
+      if (puzzleType === 'anagram' && startWord === 'RATS' && targetWord === 'STAR') {
+        if (newSteps > 2) {
+          // Silent reset as requested (no popup)
+          setCurrentWord(startWord.split(''));
+          setSteps(0);
+          setSelectedIndices([]);
+          return;
+        }
+      }
+
       setCurrentWord(newWord);
       setSelectedIndices([]);
-      setSteps(prev => prev + 1);
+      setSteps(newSteps);
     }
   };
 
@@ -190,21 +202,16 @@ export const WordPuzzle: React.FC<WordPuzzleProps> = ({ onComplete, config }) =>
     </View>
   );
 
+  const maxStepsText = (puzzleType === 'anagram' && startWord === 'RATS' && targetWord === 'STAR') ? '/2' : '';
+
   return (
     <View style={styles.container}>
-      <Text style={styles.instruction}>
-        {puzzleType === 'wordchain' 
-          ? `Transform "${startWord}" into "${targetWord}"`
-          : `Make "${targetWord}" from "${startWord}"`
-        }
-      </Text>
-      
       {puzzleType === 'anagram' && renderAnagramPuzzle()}
       {puzzleType === 'wordsearch' && renderWordSearchPuzzle()}
       {puzzleType === 'wordchain' && renderWordChainPuzzle()}
       
       <View style={styles.infoContainer}>
-        {puzzleType !== 'wordchain' && <Text style={styles.stepsText}>Steps: {steps}</Text>}
+        {puzzleType !== 'wordchain' && <Text style={styles.stepsText}>Steps: {steps}{maxStepsText}</Text>}
         <Text style={styles.targetText}>Target: {targetWord}</Text>
       </View>
     </View>

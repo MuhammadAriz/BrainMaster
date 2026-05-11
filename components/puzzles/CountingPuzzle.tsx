@@ -28,7 +28,6 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
         onComplete();
       }, 800);
     } else {
-      toast.error('Not quite! Look more carefully...');
       setTimeout(() => {
         setSelectedNumber(null);
       }, 1000);
@@ -37,8 +36,6 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
 
   return (
     <View style={styles.container}>
-      <Text style={styles.instruction}>How many triangles can you find?</Text>
-
       <View style={styles.triangleContainer}>
         <Svg height="220" width="220" viewBox="0 0 100 100">
           {/* Large outer triangle */}
@@ -52,8 +49,6 @@ export const CountingPuzzle: React.FC<CountingPuzzleProps> = ({ onComplete, conf
           <Path d="M50,30 L70,50 L50,50 Z" fill="none" stroke="#FFD700" strokeWidth="2" />
         </Svg>
       </View>
-
-      <Text style={styles.subInstruction}>Select the total number of triangles:</Text>
 
       <View style={styles.numbersContainer}>
         {numbers.map((number) => (

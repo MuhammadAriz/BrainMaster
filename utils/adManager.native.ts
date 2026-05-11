@@ -22,7 +22,6 @@ class AdManager {
       this.loadAd();
     } catch (e: any) {
       console.error("Failed to initialize Google Mobile Ads SDK", e);
-      Alert.alert("AdMob Init Error", e?.message || "Failed to start AdMob SDK");
     }
   }
 
@@ -46,7 +45,6 @@ class AdManager {
         this.isLoaded = false;
         this.isLoading = false;
         console.warn('Ad Failed to Load:', error);
-        Alert.alert("Ad Load Error", error?.message || "Google AdMob refused to load the test ad.");
         
         // Clean up and retry in 10 seconds
         this.rewardedAd = null;
@@ -56,7 +54,6 @@ class AdManager {
       this.rewardedAd.load();
     } catch (e: any) {
       console.error("AdMob Initialization Failed:", e);
-      Alert.alert("Ad Creation Error", e?.message || "Failed to create ad request.");
       this.isLoading = false;
     }
   }

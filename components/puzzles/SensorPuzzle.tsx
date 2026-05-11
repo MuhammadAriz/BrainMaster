@@ -145,7 +145,10 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
           });
 
           const recording = new Audio.Recording();
-          await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.LOW_QUALITY);
+          await recording.prepareToRecordAsync({
+            ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
+            isMeteringEnabled: true,
+          });
           await recording.getStatusAsync();
           await recording.recordAsync();
           recordingRef.current = recording;
@@ -155,12 +158,12 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
             const status = await recordingRef.current.getStatusAsync();
             if (status.canRecord && status.isRecording) {
               // status.metering is usually -160 to 0
-              // Simple threshold for "blowing"
+              // -35 is a good threshold for blowing
               const level = status.metering || -160;
-              if (level > -20) {
+              if (level > -35) {
                 setProgress(prev => {
-                  const next = Math.min(prev + 0.1, 1);
-                  if (next >= 1 && isActive) {
+                  const next = Math.min(prev + 0.15, 1);
+                  if (next >= 1) {
                     clearInterval(interval);
                     completeLevel();
                   }
@@ -301,19 +304,24 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
       case 'mic':
         return (
           <View style={styles.center}>
-            <MaterialCommunityIcons name="bowl-mix" size={100} color="#8D6E63" />
-            {progress < 1 && (
-              <View style={[styles.steam, { opacity: 1 - progress }]}>
-                <MaterialCommunityIcons name="weather-windy" size={40} color="#ccc" />
-              </View>
-            )}
-            <Text style={styles.instruction}>COOL DOWN THE SOUP</Text>
-            <Pressable
-              onPress={startSensor}
-              style={[styles.actionButton, { marginTop: 20, backgroundColor: '#795548' }]}
+            <Pressable 
+              onPress={() => {
+                setProgress(prev => {
+                  const next = Math.min(prev + 0.2, 1);
+                  if (next >= 1 && isActive) completeLevel();
+                  return next;
+                });
+              }}
+              style={styles.center}
             >
-              <Text style={styles.buttonText}>Enable Microphone</Text>
+              <MaterialCommunityIcons name="bowl-mix" size={120} color="#8D6E63" />
+              {progress < 1 && (
+                <View style={[styles.steam, { opacity: 1 - progress }]}>
+                  <MaterialCommunityIcons name="weather-windy" size={50} color="#ccc" />
+                </View>
+              )}
             </Pressable>
+            <Text style={styles.hintText}>(Blowing or Tapping works!)</Text>
           </View>
         );
 
@@ -356,7 +364,7 @@ export const SensorPuzzle: React.FC<SensorPuzzleProps> = ({ onComplete, config }
                 }}
               />
             </View>
-            <Text style={styles.instruction}>WIPE THE MIRROR</Text>
+            <Text style={styles.instruction}>IT'S TOO FOGGY... CAN'T SEE THE MIRROR</Text>
           </View>
         );
 

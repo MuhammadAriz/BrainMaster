@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { toast } from 'sonner-native';
+import Animated from 'react-native-reanimated';
 
 interface PatternPuzzleProps {
   onComplete: () => void;
@@ -52,7 +53,6 @@ export const PatternPuzzle: React.FC<PatternPuzzleProps> = ({ onComplete, config
     const isCorrectSoFar = newPattern.every((val, i) => val === correctPattern[i]);
 
     if (!isCorrectSoFar) {
-      toast.error('Wrong pattern! Try again');
       setPattern([]);
       return;
     }
@@ -67,10 +67,6 @@ export const PatternPuzzle: React.FC<PatternPuzzleProps> = ({ onComplete, config
 
   return (
     <View style={styles.container}>
-      <Text style={styles.instruction}>
-        {showingDemo ? 'Watch the pattern...' : 'Now repeat the pattern!'}
-      </Text>
-
       <View style={styles.grid}>
         {Array.from({ length: 4 }).map((_, index) => {
           const isHighlighted = highlightedCell === index;
@@ -90,15 +86,23 @@ export const PatternPuzzle: React.FC<PatternPuzzleProps> = ({ onComplete, config
               ]}
               onPress={() => handlePress(index)}
             >
-              <MaterialCommunityIcons
-                name={isSelected ? 'check' : 'circle-outline'}
-                size={30}
-                color="#fff"
-              />
+               <Animated.View style={[
+                  styles.innerCell,
+                  isHighlighted && styles.pulseEffect
+                ]}>
+                <MaterialCommunityIcons
+                  name={isSelected ? 'star' : 'circle-medium'}
+                  size={isSelected ? 40 : 25}
+                  color={isSelected ? "#FFD700" : "#555"}
+                />
+              </Animated.View>
             </Pressable>
           );
         })}
       </View>
+      
+      {/* Decorative background elements */}
+      <View style={styles.glow} />
     </View>
   );
 };
@@ -107,41 +111,62 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     alignItems: 'center',
-  },
-  instruction: {
-    fontSize: 20,
-    color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center',
+    justifyContent: 'center',
+    minHeight: 300,
   },
   grid: {
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
     position: 'relative',
   },
   cell: {
-    width: 90,
-    height: 90,
-    backgroundColor: '#333',
-    borderRadius: 10,
+    width: 100,
+    height: 100,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#555',
-    overflow: 'hidden',
+    borderColor: '#333',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  innerCell: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   topLeft: { top: 0, left: 0 },
   topRight: { top: 0, right: 0 },
   bottomLeft: { bottom: 0, left: 0 },
   bottomRight: { bottom: 0, right: 0 },
   selectedCell: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#fff',
-  },
-  highlightedCell: {
     backgroundColor: '#2E7D32',
-    borderColor: '#fff',
+    borderColor: '#4CAF50',
     borderWidth: 3,
   },
+  highlightedCell: {
+    backgroundColor: '#455A64',
+    borderColor: '#607D8B',
+    borderWidth: 4,
+    transform: [{ scale: 1.05 }],
+  },
+  pulseEffect: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  glow: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(76, 175, 80, 0.05)',
+    zIndex: -1,
+  }
 });
