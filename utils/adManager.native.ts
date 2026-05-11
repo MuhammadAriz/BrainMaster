@@ -1,24 +1,37 @@
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { toast } from 'sonner-native';
-import { RewardedAd, RewardedAdEventType, TestIds, AdEventType } from 'react-native-google-mobile-ads';
+import mobileAds, { RewardedAd, RewardedAdEventType, TestIds, AdEventType } from 'react-native-google-mobile-ads';
 
-// Real Ad Unit IDs
-const AD_UNIT_ID = Platform.select({
-  ios: TestIds.REWARDED, // Keep test ID for iOS for now
-  android: "ca-app-pub-5995980776712766/2113805866", // YOUR REAL ANDROID ID
-}) || '';
+// Force Test ID so we can verify the ad works and gives the 1 bulb reward!
+const AD_UNIT_ID = TestIds.REWARDED;
 
 class AdManager {
   private rewardedAd: any = null;
   private isLoaded = false;
   private isLoading = false;
+  private isInitialized = false;
 
   constructor() {
-    this.init();
+    this.initMobileAds();
   }
 
-  private init() {
+  private async initMobileAds() {
     try {
+      await mobileAds().initialize();
+      this.isInitialized = true;
+      this.loadAd();
+    } catch (e: any) {
+      console.error("Failed to initialize Google Mobile Ads SDK", e);
+      Alert.alert("AdMob Init Error", e?.message || "Failed to start AdMob SDK");
+    }
+  }
+
+  private loadAd() {
+    if (this.isLoading || this.isLoaded || !this.isInitialized) return;
+    this.isLoading = true;
+
+    try {
+      // Ads MUST be recreated from scratch after being shown or if they fail.
       this.rewardedAd = RewardedAd.createForAdRequest(AD_UNIT_ID, {
         requestNonPersonalizedAdsOnly: true,
       });
@@ -26,27 +39,26 @@ class AdManager {
       this.rewardedAd.addAdEventListener(RewardedAdEventType.LOADED, () => {
         this.isLoaded = true;
         this.isLoading = false;
-        console.log('Real Ad Loaded');
+        console.log('Ad Loaded and Ready!');
       });
 
       this.rewardedAd.addAdEventListener(AdEventType.ERROR, (error: any) => {
         this.isLoaded = false;
         this.isLoading = false;
-        console.warn('Ad Error:', error);
-        // Retry loading after 10 seconds
+        console.warn('Ad Failed to Load:', error);
+        Alert.alert("Ad Load Error", error?.message || "Google AdMob refused to load the test ad.");
+        
+        // Clean up and retry in 10 seconds
+        this.rewardedAd = null;
         setTimeout(() => this.loadAd(), 10000);
       });
 
-      this.loadAd();
-    } catch (e) {
+      this.rewardedAd.load();
+    } catch (e: any) {
       console.error("AdMob Initialization Failed:", e);
+      Alert.alert("Ad Creation Error", e?.message || "Failed to create ad request.");
+      this.isLoading = false;
     }
-  }
-
-  private loadAd() {
-    if (this.isLoading || this.isLoaded || !this.rewardedAd) return;
-    this.isLoading = true;
-    this.rewardedAd.load();
   }
 
   public async showRewardedAd(onReward: () => void) {
@@ -57,21 +69,31 @@ class AdManager {
     }
 
     try {
-      const unsubscribe = this.rewardedAd.addAdEventListener(
+      // Listen for the reward
+      const unsubscribeReward = this.rewardedAd.addAdEventListener(
         RewardedAdEventType.EARNED_REWARD,
         () => {
           onReward();
-          unsubscribe();
         }
       );
-      
+
+      // Listen for the ad being closed so we can destroy it and load the next one
+      const unsubscribeClosed = this.rewardedAd.addAdEventListener(
+        AdEventType.CLOSED,
+        () => {
+          this.isLoaded = false;
+          this.rewardedAd = null; // Destroy the old ticket
+          unsubscribeReward();
+          unsubscribeClosed();
+          this.loadAd(); // Pre-load the next ticket
+        }
+      );
+
       await this.rewardedAd.show();
-      
-      // Pre-load the next ad immediately after showing
-      this.isLoaded = false;
-      this.loadAd();
     } catch (error) {
       console.error("Failed to show ad:", error);
+      this.isLoaded = false;
+      this.rewardedAd = null;
       this.loadAd();
     }
   }
